@@ -1,0 +1,214 @@
+---
+title: "Content 1-1: Answers to practice questions"
+date: "Monday, September 11, 2023"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 1-1. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages and load our dataset.
+```{r}
+library(tidyverse)
+load("nmesSub.rda")
+```
+
+### General template for a `ggplot2` graph
+
+#### Practice
+
+(1) How many rows (observations) are in the `nmes.data` dataset?  How many columns (variables)?
+
+```{r}
+nmes.data
+```
+From the data itself, we see the data set is 100 rows x 18 columns, so there are 100 observations and 18 variables.  We could also get this information in other ways:
+```{r}
+nrow(nmes.data)
+ncol(nmes.data)
+
+dim(nmes.data)
+```
+
+
+(2) Make a scatterplot of `totalexp` against `age`.  Describe the relationship that you see.
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = totalexp))
+```
+
+There doesn't seem to be a clear pattern/relationship between the two variables shown in this plot.
+
+
+(3) Make a scatterplot of `bmi` against `educate`. Is this plot useful?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = educate, y = bmi))
+```
+
+A scatterplot for this relationship doesn't seem like the best choice, since `educate` is a categorical (group) variable and not a continuous (numeric) variable.  It does allow us to see the spread of bmi values for the different education levels though.
+
+(4) Make a scatterplot of `eversmk` against `educate`. Is this plot useful?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = educate, y = eversmk))
+```
+
+This plot isn't useful at all, since there is just one point for each combination of `educate` and `eversmk`.  Both of these variables are categorical variables, so we really shouldn't use a scatterplot (`geom_point()`) to look at this relationship.
+
+### Aesthetic mappings
+
+#### Practice
+
+(5) Make a scatterplot of `bmi` against `age` but map `educate` to the *size* aesthetic.  Describe your plot.  Do you think this is a useful mapping choice?  Hint: read the warning message in your R console for help.
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, size = educate))
+```
+
+Warning message says that using size for a discrete variable (meaning a grouping/categorical variable) is not advised.  We would want to use size for a numeric variable where the size of the point could represent the numeric quantity.  So mapping `totalexp` or some other continuous variable instead.
+
+(6) Make a scatterplot of `bmi` against `age` but map `educate` to the *alpha* aesthetic.  Describe your plot.  Do you think this is a useful mapping choice?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, alpha = educate))
+```
+
+We get the same warning message as in the previous question.  This plot looks a little better, though, because we can almost think of the different shadings as different colors that help differentiate the education groups.  However, alpha is really better to map to a continuous variable so that the transparency represents a numeric quantity.
+
+(7) Make a scatterplot of `bmi` against `age` but map `educate` to both the *color* and *shape* aesthetics.  What does this do?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, color = educate, shape = educate))
+```
+
+Now each education category gets it's own color/shape combination!
+
+(8) Make a scatterplot of `bmi` against `age` but map `totalexp` to the *color* aesthetic.  What does this do?  What happens when you map `totalexp` to *shape* or *size*.  
+```{r error=TRUE}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, color = totalexp))
+```
+
+When we map `totalexp` to color, the shade of blue represents the amount of medical expenditure.  
+```{r error=TRUE}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, shape = totalexp))
+```
+
+When we map `totalexp` to shape, we get an error message that continous variables cannot be mapped to shape.  This makes sense, because we would need a different shape for every possible medical expenditure.
+```{r error=TRUE}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, size = totalexp))
+```
+
+When we map `totalexp` to size, we get a nice plot!  Here the size of the point represents the amount of medical expenditure.  This type of plot could be useful to see whether all the largest expenditures have similar age/bmi values.
+
+(9) Try the code below. Can you figure out what it is doing?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, color = totalexp > 2000))
+```
+
+This plot is coloring points based on whether the total medical expenditure is more than 2000.  The high medical expenditures (more than 2000) are colored blue and the low medical expenditures (2000 or less) are colored red.
+
+### Setting aesthetics manually for all points
+
+#### Practice:
+
+(10) What's wrong with this code?  Why are the points in the resulting plot not green?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi, color = "green"))
+```
+
+The `color = "green"` piece needs to be outside the `aes()` mapping to apply to all of the points.  This is the correct way to do it:
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi), color = "green")
+```
+
+
+(11) Design your own plot of `bmi` against `age` where you manually set the aesthetics to be the color, shape, and size of your choice.
+
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi), color = "red", shape = "triangle", size = 5) 
+```
+
+### Adding facets
+
+#### Practice
+
+(12) What happens if you facet on a continous variable like `totalexp`?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi)) +
+  facet_wrap(~ totalexp)
+```
+
+We get a separate plot for each possible value of `totalexp`.  Since most medical expenditures appear only one, this means we get lots of plots with only one point in them.  Not very useful!
+
+(13) What do the empty cells in the plot below mean?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi)) +
+  facet_grid(marital ~ female)
+```
+
+There are no observations in the data set for those facet combinations.  So no male individuals with marital status 3 or 4.
+
+(14) What do the following plots do?  Can you guess what the `.` means?
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi)) +
+  facet_grid( . ~ female)
+
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi)) +
+  facet_grid(educate ~ .)
+```
+
+The first plot facets by `female` in the columns and the second plot facets by `educate` in the rows.  So the dot means to not facet that part, so there's no row facet in the first plot and no column facet in the second plot.
+
+(15) Read the help file for `facet_wrap()` by typing `?facet_wrap` at the command prompt.  What does `nrow` do?  What does `ncol` do?  What other options could you use to control the layout of the individual panels?  What doesn't `facet_grid()` have `nrow` and `ncol` options?
+```{r}
+?facet_wrap
+```
+The `ncol` option tells the number of columns to divide the plots into.  The `facet_grid()` function doesn't need this option because you explicitly tell it which variable to split into the columns.
+
+### Geometric objects
+
+#### Practice
+
+(16) Look at the code below and make a prediction about what the resulting graph will look like.  Then run the code and check your prediction:
+```{r}
+ggplot(data = nmes.data, mapping = aes(x = age, y = bmi, color = female)) +
+  geom_point() +
+  geom_rug()
+```
+
+This plot will contain both points and also tick marks along the x and y-axes.  It will have `age` on the x-axis and `bmi` on the y-axis and the color of the points and tick marks will be by the `female` variable.
+
+(17) What does the `show.legend = FALSE` option do in the code below?
+```{r}
+ggplot(data = nmes.data, mapping = aes(x = age, y = bmi, color = female)) +
+  geom_point() +
+  geom_smooth()
+
+ggplot(data = nmes.data, mapping = aes(x = age, y = bmi, color = female)) +
+  geom_point(show.legend = FALSE) +
+  geom_smooth()
+
+ggplot(data = nmes.data, mapping = aes(x = age, y = bmi, color = female)) +
+  geom_point() +
+  geom_smooth(show.legend = FALSE)
+
+ggplot(data = nmes.data, mapping = aes(x = age, y = bmi, color = female)) +
+  geom_point(show.legend = FALSE) +
+  geom_smooth(show.legend = FALSE)
+```
+
+The `show.legend = FALSE` option turns off the legend for that geom.  To remove the legend from both the smooth line and the points, you have to put the `show.legend = FALSE` in both geoms.
