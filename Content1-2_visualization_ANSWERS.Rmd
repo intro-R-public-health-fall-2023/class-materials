@@ -1,0 +1,108 @@
+---
+title: "Content 1-2: Answers to practice questions"
+date: "Monday, September 18, 2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 1-2. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages and load our dataset.
+```{r}
+library(tidyverse)
+load("nmesSub.rda")
+```
+
+### Bar charts
+
+#### Practice
+
+1. Make a bar chart that shows the proportion of individuals in our data set with and without a major smoking-caused disease (`mscd`).
+```{r}
+ggplot(data = nmes.data, mapping = aes(group = 1)) + 
+  geom_bar(mapping = aes(x = mscd, y = stat(prop)))
+```
+
+### Position adjustments
+
+#### Practice
+
+2. Make a bar chart that allows you to compare the proportion of individuals with a major smoking-caused disease (`mscd`) between those who have and haven't ever smoked (`eversmk`).
+
+Since we want to know the proportion of major smoking-caused disease between smoker and non-smokers, we need to know the proportion within the `eversmk` groups.  The easiest way to do this is with the `"fill"` position.  
+```{r}
+ggplot(data = nmes.data) + 
+  geom_bar(mapping = aes(x = eversmk, y = stat(count), fill = mscd), position = "fill")
+```
+
+If you switch the `x` and `fill` aesthetics, the plot isn't quite right -- it lets us compare the proportion of smokers between the two disease status groups instead:
+```{r}
+ggplot(data = nmes.data) + 
+  geom_bar(mapping = aes(x = mscd, y = stat(count), fill = eversmk), position = "fill")
+```
+
+### Coordinate systems
+
+#### Practice
+
+3. Flip the coordinates on your bar chart that compares the proportion of individuals with a major smoking-caused disease (`mscd`) between those who have and haven't ever smoked (`eversmk`).
+```{r}
+ggplot(data = nmes.data) + 
+  geom_bar(mapping = aes(x = eversmk, y = stat(count), fill = mscd), position = "fill") + 
+  coord_flip()
+```
+
+4. Create a zoomed-in scatterplot of `bmi` vs. `age` with only bmi values between 20-25 and only ages between 40-60.
+```{r}
+ggplot(data = nmes.data) +
+  geom_point(mapping = aes(x = age, y = bmi)) +
+  coord_cartesian(xlim = c(40, 60), ylim = c(20, 25))
+```
+
+### Pulling it all together -- the layered language of graphics
+
+### Boxplots
+
+#### Practice
+
+5. Make a graphic that shows the relationship between total medical expenditures (`totalexp`) and smoking (`eversmk`) separately for the three seat-belt groups.
+```{r}
+ggplot(data = nmes.data) +
+  geom_boxplot(mapping = aes(x = eversmk, y = totalexp)) + 
+  facet_wrap(~ beltuse)
+```
+
+6. Make a graphic that shows the relationship between total medical expenditures (`totalexp`) and smoking (`eversmk`) separately for the three seat-belt groups, where the boxplots are colored differently for the different smoking (`eversmk`) groups.
+```{r}
+ggplot(data = nmes.data) +
+  geom_boxplot(mapping = aes(x = eversmk, y = totalexp, color = eversmk)) + 
+  facet_wrap(~ beltuse)
+```
+
+```{r}
+ggplot(data = nmes.data) +
+  geom_boxplot(mapping = aes(x = eversmk, y = totalexp, fill = eversmk)) + 
+  facet_wrap(~ beltuse)
+```
+
+7. Flip the coordinates of the graph you made in 6.
+```{r}
+ggplot(data = nmes.data) +
+  geom_boxplot(mapping = aes(x = eversmk, y = totalexp, fill = eversmk)) + 
+  facet_wrap(~ beltuse) + 
+  coord_flip()
+```
+
+8. If you type `?geom_boxplot` in the console window to open the help file for this geom, you'll see there is an option called `varwidth` with a default value of `FALSE`.  What happens if you set this option to `TRUE`?  Create the two plots with below, and also scroll down through the help file to see what it says about `varwidth`.
+```{r}
+ggplot(data = nmes.data) +
+  geom_boxplot(mapping = aes(x = mscd, y = totalexp), varwidth = FALSE)
+
+ggplot(data = nmes.data) +
+  geom_boxplot(mapping = aes(x = mscd, y = totalexp), varwidth = TRUE)
+```
+
+The first plot, with `varwidth = TRUE` has boxplots of the same width but the second plot, with `varwidth = FALSE` has a narrower boxplot for the "Yes" MSCD group compared to the "No" MSCD group.  From the help file: "`varwidth`: If `FALSE` (default) make a standard box plot. If `TRUE`, boxes are drawn with widths proportional to the square-roots of the number of observations in the groups (possibly weighted, using the weight aesthetic)."  So when this is set to `TRUE`, the width of the box reflects the number of observations included in the box.  This is helpful for comparing sample sizes across groups.
