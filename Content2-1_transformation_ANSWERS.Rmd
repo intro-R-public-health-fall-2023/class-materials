@@ -1,0 +1,167 @@
+---
+title: "Content 1-2: Answers to practice questions"
+date: "Monday, September 25, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 2-1. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages and load our dataset.
+```{r}
+library(tidyverse)
+load("nmes2018.rda")
+```
+
+# Filter rows with `filter()`
+
+## Practice
+
+1. Find all individuals who meet the following characteristics:
+
+a. Had more than $1,000 but less than $10,000 in medical expenditures: *There are 1,131 of these individuals.*
+```{r}
+filter(nmes.data, totalexp > 1000, totalexp < 10000)
+```
+
+b. Always wear a seatbelt: *There are 2,283 of these individuals.*
+```{r}
+filter(nmes.data, beltuse == "Always")
+```
+
+c. Have a BMI of at least 30 and currently smoke: *There are 148 of these individuals.*
+```{r}
+filter(nmes.data, bmi >= 30, current == "Yes")
+```
+
+d. Are both poor and college grads: *There are 58 of these individuals.*
+```{r}
+filter(nmes.data, poor == "Poor", educate == "CollGrad")
+```
+
+e. Quit smoking more than 10 years ago: *There are 439 of these individuals.*
+```{r}
+filter(nmes.data, yearsince > 10)  
+```
+
+f. Quit smoking more than 10 years ago and are younger than 25 years old: *There are 0 of these individuals.*
+```{r}
+filter(nmes.data, yearsince > 10, age < 25)     
+```
+
+g. Quit smoking more than 10 years ago or are younger than 25 years old: *There are 852 of these individuals.*
+```{r}
+filter(nmes.data, yearsince > 10 | age < 25)       
+```
+
+2. Another useful filtering helper is `between()`.  Look at the help file for this function using `?between`.  Can you use it to simplify the code below?
+```{r}
+filter(nmes.data, totalexp >= 1000, totalexp <= 10000)
+filter(nmes.data, between(totalexp, 1000, 10000))
+```
+
+3. How many individuals are missing `bmi` values?
+
+There are 124 individuals missing `bmi` values:
+```{r}
+no_bmi <- filter(nmes.data, is.na(bmi))
+nrow(no_bmi)
+```
+
+4. How many individuals are missing `current` values?  Filter to these individuals.  Do you think this is really *missing* data?
+
+There are 2,084 individuals missing current values. These individuals all have `no` values for `eversmk`, so it looks like these individuals have never been smokers.  So it's not really missing data, we know these are not current smokers!
+```{r}
+no_current <- filter(nmes.data, is.na(current)) 
+nrow(no_current)
+
+no_current
+```
+
+
+# Arrange rows with `arrange()`
+
+## Practice
+
+5. Sort individuals in this dataset to find the youngest people. Remember you can force `R` to show all the columns with the `print()` function and `width = Inf`.
+
+To see the age variable, you might need to increase your window size, since it is one of the later variables.  Alternatively, you could use the `print()` function with `width = Inf` to force all the columns to be shown. We can see the youngest individuals are 19 years old.
+```{r}
+arrange(nmes.data, age)
+
+print(arrange(nmes.data, age), width = Inf)
+```
+
+6. Sort individuals in this dataset to find the oldest never smokers.
+
+The first category for `eversmk` is `no`, so the never smokers will be first if we sort by `eversmk`.  Then we want to sort by `desc(age)` to get the oldest ages first within the smoking categories.  We see the oldest never smokers are 94 years old.
+```{r}
+levels(nmes.data$eversmk)
+
+arrange(nmes.data, eversmk, desc(age))
+
+print(arrange(nmes.data, eversmk, desc(age)), width = Inf)
+```
+
+7. Sort individuals in this dataset to find the oldest ever smokers
+
+Now we want to sort first by `desc(eversmk)` to put the ever smokers first.  Then sort by `desc(age)` to get the oldest individuals within the smoking groups first.  The oldest ever smokers are also 94 years old.
+```{r}
+arrange(nmes.data, desc(eversmk), desc(age))
+
+print(arrange(nmes.data, desc(eversmk), desc(age)), width = Inf)
+```
+
+8. Sort individuals in this dataset to find the never smokers with the highest medical expenditures.
+
+Sort first by `eversmk` to get the never smokers first; then by `desc(totalexp)` to get the highest expenditures first.  The highest expenditure among the nevers smokers is $128,157.
+```{r}
+arrange(nmes.data, eversmk, desc(totalexp))
+```
+
+
+# Select columns with `select()`
+
+## Practice
+
+9. What happens if you include the name of a variable multiple times in a `select()` call?
+
+You still just get each variable once, not multiple copies of the same variable.
+
+```{r}
+select(nmes.data, age, ageCat, bmi, bmi)
+```
+
+10. What does the `any_of()` function do? Run the code below to figure it out:
+
+It allows you to select any variables whose name is included in the list of variables you specified and stored as `myVars`.  Selecting variables this way can be helpful when you want to be able to change the list of variable names you want to select in an organized way.
+```{r}
+myVars <- c("totalexp", "mscd", "age", "eversmk", "bmi")
+select(nmes.data, any_of(myVars))
+```
+
+
+# Add new variables with `mutate()`
+
+## Practice
+
+11. Create the following new variable and add to our NMES dataset in a single mutate command:
+
+* Variable that tells whether an individual always uses their seat belt
+* Variable that tells whether an individual's medical expenditures are higher than the mean expenditure value in the dataset
+* Variable that tells whether an individual quit smoking more than 5 years ago
+
+```{r}
+nmes.data.2 <- mutate(nmes.data, 
+                      always_belt = (beltuse == "Always"),
+                      exp_above_mean = (totalexp > mean(totalexp)),
+                      former_5 = yearsince > 5)
+
+print(nmes.data.2, width = Inf)
+```
