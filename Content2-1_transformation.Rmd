@@ -394,7 +394,7 @@ select(nmes.data, age, ageCat, bmi, bmi)
 10. What does the `any_of()` function do? Run the code below to figure it out:
 ```{r}
 myVars <- c("totalexp", "mscd", "age", "eversmk", "bmi")
-select(nmes.data, one_of(myVars))
+select(nmes.data, any_of(myVars))
 ```
 
 
