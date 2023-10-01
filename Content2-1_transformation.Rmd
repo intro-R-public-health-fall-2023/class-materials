@@ -113,7 +113,7 @@ filter(nmes.data, totalexp > 10000)
 filter(nmes.data, eversmk == "no", totalexp > 10000)
 ```
 
-*You can see there are XXX individuals who had never smoked and spend more than $10,000.*
+*You can see there are 86 individuals who had never smoked and spend more than $10,000.*
 
 If we want to save any of these *new* data frames for further use, we need to store the result as something using the *assignment operator*, `<-`:
 ```{r}
@@ -130,7 +130,7 @@ Notice that we filtered on 3 different conditions:
 
 * `eversmk == "Yes"`
 * `totalexp > 10000`
-* `eversmk == "No"`
+* `eversmk == "no"`
 
 We define these conditions using comparisons: We compare the values in `eversmk` to either `"Yes"` or `"No"` and we compare the values in `totalexp` to the value 10000.  The standard comparison operators we can use are:
 
