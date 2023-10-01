@@ -1,0 +1,147 @@
+---
+title: "Content 2-2: Answers to practice questions"
+date: "Monday, October 2, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 2-2. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages and load our dataset.
+```{r}
+library(tidyverse)
+load("nmes2018.rda")
+```
+
+# Grouped summaries with `summarize()` and `group_by()`
+
+## Practice:
+
+1. Calculate the mean medical expenditures for each of the age groups defined by `ageCat`.  What happens to medical expenditures with increasing age?
+```{r}
+by_age <- group_by(nmes.data, ageCat)
+
+summarize(by_age,  mean_exp = mean(totalexp))
+```
+
+**With increasing age across these age groups, the mean medical expenditure also increases.**
+
+2. Calculate the minimum and maximum ages for each of the education groups defined by `educate`.
+```{r}
+by_edu <- group_by(nmes.data, educate)
+
+summarize(by_edu,  
+          min_age = min(age),
+          max_age = max(age))
+```
+
+**All of these education groups have similiar age ranges, except there is a higher minimum age among college graduates.  This makes sense, since college graduates are generally at least 21 years old.**
+
+## Summarizing counts
+
+## The `count()` function
+
+## Grouping by multiple variables
+
+## Practice
+
+3. Find the number of people, mean, and median medical expenditures for those who have and don't have a major smoking-caused disease (`mscd`).
+```{r}
+by_mscd <- group_by(nmes.data, mscd)
+
+summarize(by_mscd, 
+          n = n(),
+          mean_exp = mean(totalexp),
+          median_exp = median(totalexp))
+```
+
+4. Find the number of people, mean, and median BMIs for those who have and haven't ever smoked (`eversmk`).
+
+Here we need to use `sum(!is.na())` to count the number of individuals, since there is missing BMI data.  We also need to add the `na.rm = TRUE` option for our summary statistics.
+```{r}
+by_smk <- group_by(nmes.data, eversmk)
+
+summarize(by_smk, 
+          n = sum(!is.na(bmi)),
+          mean_exp = mean(bmi, na.rm = TRUE),
+          median_exp = median(bmi, na.rm = TRUE))
+```
+
+5. Find the number of people and the minimum and maximum medical expenditures for each combination of poverty status (`poor`) and education level (`educate`).
+```{r}
+by_poor_educate <- group_by(nmes.data, poor, educate)
+
+summarize(by_poor_educate, 
+          n = n(),
+          min_exp = min(totalexp),
+          max_exp = max(totalexp))
+```
+
+# Combining multiple operations with the pipe, `%>%`
+
+## Practice
+
+6. Use the pipe to perform the following sequence of operations on the NMES data: mutate to create a log10 medical expenditures variable, filter to only people older than 65, group by smoking status, summarize to get median log10 expenditures and the number of people in each smoking group
+```{r}
+nmes.data %>%
+  mutate(log_exp = log10(totalexp)) %>%
+  filter(age > 65) %>%
+  group_by(eversmk) %>%
+  summarize(n = n(), med_log_exp = median(log_exp))
+```
+
+## Back to grouping by multiple variables
+
+## Practice
+
+7. Use the pipe to calculate the proportions of people with and without MSCD within each smoking group.
+```{r}
+nmes.data %>%
+  group_by(eversmk, mscd) %>%
+  summarize(n = n()) %>%
+  mutate(prop = n/sum(n))
+```
+
+**The proportion with MSCD is higher among smokers compared to non-smokers.**
+
+8. Modify your code from 7 to only give the proportions *with* MSCD for each smoking group.
+
+**Here we need to filter our results to only choose the rows with `mscd == "Yes"`:**
+```{r}
+nmes.data %>%
+  group_by(eversmk, mscd) %>%
+  summarize(n = n()) %>%
+  mutate(prop = n/sum(n)) %>%
+  filter(mscd == "Yes")
+```
+
+**Note we could clean up this table of proportions even more by removing the `mscd` column by adding a `select()` function at the end.**  I also added a more informative name to the proportion column to get a nice table showing the risk of MSCD within each smoking group.
+```{r}
+nmes.data %>%
+  group_by(eversmk, mscd) %>%
+  summarize(n = n()) %>%
+  mutate(risk_of_mscd = n/sum(n)) %>%
+  filter(mscd == "Yes") %>%
+  select(-mscd)
+```
+
+## Ungrouping
+
+# Combining `dplyr` with `ggplot2`
+
+## Practice
+
+9. Use the pipe to create a scatterplot of log10 medical expenditures vs. age, with points colored differently for smokers and non-smokers.  Add smoothed lines for each smoking group as well.
+```{r}
+nmes.data %>%
+  mutate(log_exp = log10(totalexp)) %>%
+  ggplot(mapping = aes(x = age, y = log_exp, color = eversmk)) +
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
