@@ -207,7 +207,7 @@ summarize(nmes.nonsmokers.by_age, mean_exp=mean(totalexp))
 
 To do this, we need to save our modified data frame each time we change it, even though all we really care about is the very last result and not the intermediate steps.  And you can see how our data frame names could become out of control if we had to do many more steps!
 
-A better option is to use the pipe, designated by `%>%`, to take the result from one of these operations and "pipe" it straight into the next one without saving the intermediate results. Basically this pipe operation takes the result from the thing on the left and puts it into the first argument of the thing on the right.  Since each of these operations take a data frame as the first argument and return a modified data frame as a result, this works perfectly for what we want!
+A better option is to use the pipe, designated by `%>%`, to take the result from one of these operations and "pipe" it straight into the next one without saving the intermediate results. Basically this pipe operation takes the result from the thing on the left and puts it into the first argument of the thing on the right.  Since each of these operations takes a data frame as the first argument and returns a modified data frame as a result, this works perfectly for what we want!
 
 Since the result on the left goes into the first argument on the right, we just omit the first argument from all of the functions, like this:
 
@@ -226,6 +226,9 @@ nmes.data %>%
 Writing our code this way is a lot cleaner and actually makes what we are doing more clear!  If you think about reading the `%>%` symbol as "then", you might read this code as:
 
 Start with `nmes.data`. **Then** filter to `eversmk == "Yes`. **Then** group by `ageCat`. **Then** summarize by calculating mean `totalexp`.
+
+**Note:** In more recent versions of R, there is a new pipe command, which is slightly more concise than the `%>%` pipe since it is only two characters: `|>`. The `%>%` pipe requires a package called `magrittr`, which is loaded as part of the `tidyverse` wheras the `|>` pipe is part of base R (i.e., R with no additional libraries loaded). However, both pipes have nearly identical functionality, so I will continue to use the `%>%` pipe since it is what I use in my own code. But it does not hurt to be aware of the `|>` pipe in case you come across it in other code.
+
 
 ## Practice
 
