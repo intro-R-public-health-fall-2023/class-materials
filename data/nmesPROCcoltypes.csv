@@ -1,0 +1,10 @@
+id,totalexp,lc5,chd5,eversmk,current,former,packyears,yearsince,bmi,beltuse,educate,marital,poor,age,female,mscd,ageCat,dob,mid_init
+20449,25951.58008,LC,No CHD,no,NA,no,0,0,23.96408272,Some,Other,1,Poor,78,Female,Yes,"(65,99]",10/20/18,T
+15534,378.3299866,No LC,No CHD,Yes,Yes,no,3,0,26.68132973,Always,CollGrad,5,Not Poor,30,Female,No,"(0,40]",9/17/49,
+9503,51.18000031,No LC,No CHD,Yes,no,Yes,40,9,22.32026672,Always,Other,1,Not Poor,72,Female,No,"(65,99]",6/25/84,
+15024,1899.199951,No LC,No CHD,no,NA,no,0,0,25.06986427,Always,Other,2,Not Poor,64,Female,No,"(40,65]",4/18/81,F
+17817,153.5,No LC,No CHD,Yes,Yes,no,86,0,20.23633766,Always,CollGrad,1,Not Poor,59,Female,No,"(40,65]",8/15/45,F
+31716,270,No LC,No CHD,no,NA,no,0,0,22.19735527,Some,CollGrad,5,Not Poor,25,Male,No,"(0,40]",11/11/11,
+679,142,No LC,No CHD,no,NA,no,0,0,24.3786869,Always,CollGrad,1,Not Poor,58,Female,No,"(40,65]",3/28/39,
+32819,898.5,No LC,No CHD,Yes,no,Yes,0.899999976,32,24.08109474,Always,CollGrad,1,Not Poor,56,Female,No,"(40,65]",12/31/67,T
+33173,346,No LC,No CHD,no,NA,no,0,0,17.50937843,Always,CollGrad,1,Not Poor,26,Female,No,"(0,40]",8/19/55,

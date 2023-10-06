@@ -1,0 +1,80 @@
+---
+title: "Content 3-1: Answers to practice questions"
+date: "Monday, October 9, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{css, echo=FALSE}
+.scroll-200 {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: inherit;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+This document contains answers to the practice questions in Content 3-1. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages and load our dataset.
+```{r}
+library(tidyverse)
+load("nmes2018.rda")
+```
+
+# Working with data tibbles and data frames
+
+## Subsetting data sets to individual variables
+
+## Practice
+
+1. What's the difference between the results of these two sets of code?
+
+```{r eval=FALSE}
+nmes.data %>%
+  .$age
+
+nmes.data %>%
+  select(age)
+```
+
+**The first one returns a vector with all the age values in it.  The second one returns a data frame that has one variable in it -- age.**
+
+2. If you have the name of a variable stored in an object like `var <- "age"`, how can you extract that variable from a tibble?  Which one of these works?  Why?
+
+```{r eval=FALSE}
+var <- "age"
+
+nmes.data %>%
+  .$var
+
+nmes.data %>%
+  .[[var]]
+```
+
+**Only the second code options works in this case.  That's because only the second option, the square brackets, allows us to refer to a variable name in quotes.**
+
+# Importing data using functions from `readr`
+
+## Using `read_csv()` to import data
+
+## Practice
+
+3. What to the functions `read_tsv()` and `read_delim()` do? 
+```{r}
+?read_tsv
+?read_delim
+```
+
+**`read_tsv()` reads in data where the values are separated by tabs instead of commas.  `read_delim()` reads in data were the values are separated by a specified delimiter.  You can specify the particular delimiter you are using with the `delim = ` option.**
+
+## Parsing a file
+
+## Writing to a file
+

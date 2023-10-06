@@ -1,0 +1,357 @@
+---
+title: "Content 3-1: Data wrangling"
+date: "Monday, October 9, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 2
+---
+```{css, echo=FALSE}
+.scroll-200 {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: inherit;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In Module 3, we will learn about "data wrangling", which is the process of getting data into `R` and into the right format for making graphs and doing statistical analyses.  In Content 3-1, we will spend more time on working with tibbles and work on reading data into `R` using the `readr` package.  The `readr` package is part of the `tidyverse`.
+
+*Note:* These class activities are adapted from "R for Data Science" by Grolemund and Wickham, chapters 10 and 11.  You can find this book [here](https://r4ds.had.co.nz/)
+
+Load the `tidyverse` group of packages to have access to `readr`.  Also load the NMES data so we can work with it.
+```{r}
+library(tidyverse)
+load("nmes2018.rda")
+```
+
+# Working with data tibbles and data frames
+
+We have already seen a little bit about tibbles in Module 2.  Recall that tibbles are a version of a data frame that adapts to print out only the number or rows/columns that will fit on your screen:
+```{r}
+nmes.data
+```
+
+Remember, you can always see the whole data set with the `View()` function:
+```{r eval=FALSE}
+View(nmes.data)
+```
+
+Or you can view all the columns by using the `print()` function with the `width = Inf` options.  Notice here we can "pipe" our data into the `print()` function:
+```{r class.output="scroll-200"}
+nmes.data %>% print(width = Inf)
+```
+
+Recall that tibbles also tell us the type of the variable for each column in our data: 
+
+* `int` means integers
+* `dbl` means doubles (or real numbers)
+* `fct` means factors, how `R` represents categorical variables with fixed possible categories
+* `chr` means characters (also called strings)
+* `lgl` means logicals (values that can only be `TRUE` or `FALSE`)
+* `date` means dates
+* `dttm` means date-times (a date + a time)
+
+We can also get just a list of the variable names using the `names()` function:
+```{r}
+names(nmes.data)
+```
+
+
+## Subsetting data sets to individual variables
+
+So far we've been working with complete data frames or tibbles, but we can also access an individual column/variable from within a data set.  We do this with the `$` operator or the `[[ ]]` operator.  Suppose we want just the `age` column from the NMES data.  We could get this in three ways:
+
+Using the `$` operator and the name of the variable we want:
+```{r class.output="scroll-200"}
+nmes.data$age
+```
+
+Using the `[[]]` operator with the name of the variable we want in quotation marks:
+```{r class.output="scroll-200"}
+nmes.data[["age"]]
+```
+
+Using the `[[]]` operator with the position (column number) of the variable we want:
+```{r class.output="scroll-200"}
+nmes.data[[15]]
+```
+
+Referring to variables by position can be dangerous if variables are re-ordered or removed, so it's good practice to use names where possible.  
+
+We can use these methods of subsetting within the pipe as well, where we use the placeholder `.` to refer to the name of the tibble/data frame.  In general, when you pipe a dataset into a function where the first argument isn't a data argument, you can always use the `.` to show which part of the function you want the dataset to be piped into.
+```{r class.output="scroll-200"}
+nmes.data %>%
+  .$age
+```
+
+```{r class.output="scroll-200"}
+nmes.data %>%
+  .[["age"]]
+```
+
+```{r class.output="scroll-200"}
+nmes.data %>%
+  pull(age)
+```
+
+
+## Practice
+
+1. What's the difference between the results of these two sets of code?
+
+```{r eval=FALSE}
+nmes.data %>%
+  .$age
+
+nmes.data %>%
+  select(age)
+```
+
+2. If you have the name of a variable stored in an object like `var <- "age"`, how can you extract that variable from a tibble?  Which one of these works?  Why?
+
+```{r eval=FALSE}
+var <- "age"
+
+nmes.data %>%
+  .$var
+
+nmes.data %>%
+  .[[var]]
+```
+
+# Importing data using functions from `readr`
+
+So far we have simply loaded a dataset `nmes.data` that I have made available to use in an `.Rda` object.  But if you wanted to work with your own data, you would need to be able to import it into R yourself.  We will focus on importing data using the tools in the `readr` package.  It has handy tools for reading in **delimited** data, which are data files where variables/columns are separated with a particular character like a comma, tab, vertical line, etc.  The character that separates values is called the **delimiter**.
+
+There are other packages to read in different types of data: `haven` can read from SPSS, Stata, and SAS data files and `readxl` allows you to read from an Excel file.  However, we will focus on reading from csv, or comma separated values, files since these are one of the most common ways to share data.  Most other statistical software packages and Excel can save data into csv files for easy reading into R.
+
+## Using `read_csv()` to import data
+
+We are going to read in the NMES data from a csv file.  Look in the "File" window in RStudio cloud.  You can see there's a file called `nmesPROC.csv`.  Open this file (you can do so by clicking on the file from within the "File" window and selecting "View File.")  It will open in another tab at the top of RStudio.  In this file you can see that the first row of the file contains the variable names, separated by commas.  The second row of this file contains the values for the first individual in the dataset, also separated by commas.  This is why this type of file is called a csv file, for comma separated values.
+
+Let's import the data from this file into R using `read_csv()`.  The first argument of the `read_csv()` function is the path to the file to read.  In an RStudio project, the main project folder is considered the working directory for the project, and all paths are relative to this main folder.  So if the data file is in the main project folder, you can just give the name of the file itself in quotes.  Since our `nmesPROC.csv` is in the main project folder, we can read this file in like this:
+
+```{r}
+nmesData <- read_csv("nmesPROC.csv")
+nmesData
+```
+
+In an RStudio project, if the data file is contained in a subfolder of the main project folder, such as in a "data" folder, you give the path to that file *from the main folder* including the file name in quotes.  In your "Files" window, you'll see there's a folder called "data". If you click on this folder, you'll again see there's a `nmesPROC.csv` file inside.  We would read this file in like this:
+
+```{r}
+nmesData <- read_csv("data/nmesPROC.csv")
+nmesData
+```
+
+When we use the `read_csv()` function, it prints out a column specification that gives the names and type of each column.  These column specifications are based on what `readr` has guessed are the data types for each column.  We'll come back to this in a minute!  
+
+Also, we see that `read_csv()` automatically uses the first row of the data file for the column names, as we had in our `nmesPROC.csv` file.  But this won't always be the case!  We can change this default behavior in two ways:
+
+* If there are some rows of metadata at the top of the file, we can skip these by using the `skip = n` option to skip the first n lines.  
+* If the data file doesn't have column names, you can use `col_names = FALSE` to not treat the first row as headings; then the columns will just be names `X1`, `X2`, `X3`, etc.
+
+We might want to use this first option for the `nmesPROCmetadata.csv` file, which contains information about the datset at the top of the file.  You can find this file in the "data" folder as well.  Open this file and look at the structure of the data. You can see there appear to be 3 lines of values at the top that aren't really data and instead give information about the where the dataset comes from.  (Notice all those commas at the end of these lines!)
+
+After these three lines, we see the same data structure as in our `nmesPROC.csv` data file.  So we just need to skip these first three lines:
+
+**Wrong way gives a warning message and the first two rows of the data look strange.**
+```{r}
+nmesData <- read_csv("data/nmesPROCmetadata.csv")  # gives a warning message!
+nmesData
+```
+
+**Right way the data looks okay!**
+```{r}
+nmesData <- read_csv("data/nmesPROCmetadata.csv", skip = 3)
+nmesData
+```
+
+We might want to use this second option for the `nmesPROCnonames.csv` file, which doesn't contain a first row containing the variable names. You can find this file in the "data" folder as well.  Open this file and look at the structure of the data. You can see the very first row  is already showing data for the first individual.
+
+So we can include the `col_names = FALSE` option to give generic names to the variables instead.
+
+**Wrong way gives a warning message and the column names are made from the first row of data!**
+```{r}
+nmesData <- read_csv("data/nmesPROCnonames.csv")  # gives a warnings message!
+nmesData
+```
+
+**Right way the data looks okay!**
+```{r}
+nmesData <- read_csv("data/nmesPROCnonames.csv", col_names = FALSE)
+nmesData
+```
+
+Here we would then have to use the `rename()` function to give the data more meaningful column names, so we wouldn't need to remember what was `X1` and what was `X2`.
+
+We can also specify what values in the datafile we want `R` to designate as missing data (replace with `NA`).  The default is that anything designated as blank ("") or as NA will be treated as missing.  But we can change this with the `na` option in `read_csv()`.  For example, if we know that missing values are coded as 99999, then we can make that modification. (Note, values like this are often used to code missing data because it's a value that obviously isn't a real data value.)
+
+We might want to use this option for the `nmesPROCmissing99999.csv` file, which you can find in the "data" folder as well.  Open this file and look at the structure of the data. It might not be obvious from looking at the file itself, but there are values of 99999 in this file that represent a value is missing.  For the first individual in the dataset, you can see a value of 99999 for the `current` variable.  We can tell R to designate all these 99999 values as `NA` using the `na = ` option:
+
+**Wrong way (no warning message) but the mean BMI is an impossibly high value!**
+```{r}
+nmesData <- read_csv("data/nmesPROCmissing99999.csv")
+mean(nmesData$bmi)  # all the missing BMI values are counted as 99999!
+```
+
+**Right way gives a reasonable mean BMI, once we exclude the missing values!**
+```{r}
+nmesData <- read_csv("data/nmesPROCmissing99999.csv", na = c("99999"))
+mean(nmesData$bmi) # now missing values are NA
+mean(nmesData$bmi, na.rm=TRUE)  # we can calculate the mean by excluding the missing values
+```
+
+## Practice
+
+3. What do the functions `read_tsv()` and `read_delim()` do? 
+```{r}
+?read_tsv
+?read_delim
+```
+
+## Parsing a file
+
+We already saw that when we use the `read_csv()` function, it prints out a column specification that gives the names and type of each column.  These column specifications are based on what `readr` has guessed are the data types for each column.  Basically, `readr` reads the first (up to) 1000 rows of data and guesses the data type based on what it sees.  It then uses those specification to read (parse) the data in a way specific to that data type.
+
+We can use the `guess_parser()` function to see what `readr` would guess for some different variables formats:
+
+```{r}
+guess_parser("2010-10-01")
+guess_parser("15:01")
+guess_parser("TRUE")
+guess_parser(c("1", "5", "9"))
+guess_parser(c("12352561.45"))
+```
+
+Let's go back to our original NMES data:
+```{r}
+nmesData <- read_csv("data/nmesPROC.csv")
+```
+
+We can see the variable types that `readr` has guessed in these specifications.  We can also define the specifications ourselves, if we want something different that what `readr` has chosen.  This is particularly useful if `readr` guesses wrong or we want something different that what's been chosen:
+```{r}
+nmesData <- read_csv("data/nmesPROC.csv", 
+                     col_types = cols(
+                       id = col_double(),
+                       totalexp = col_double(),
+                       lc5 = col_character(),
+                       chd5 = col_character(),
+                       eversmk = col_character(),
+                       current = col_character(),
+                       former = col_character(),
+                       packyears = col_double(),
+                       yearsince = col_double(),
+                       bmi = col_double(),
+                       beltuse = col_character(),
+                       educate = col_character(),
+                       marital = col_integer(),
+                       poor = col_character(),
+                       age = col_double(),
+                       female = col_character(),
+                       mscd = col_character(),
+                       ageCat = col_character()
+                       )
+                     )
+                     
+```
+
+In our case, it did a good job guessing, but there are times we might want to specify in advance what the types should be or we might what to correct what's been chosen:  We can choose from:
+
+* `col_logical()`: contains `F`, `T`, `FALSE`, `TRUE`
+* `col_character()`: contains text; default if can't guess something else
+* `col_integer()`: contains only numeric characters and `-`
+* `col_double()`: contains only valid doubles (`24.5`, `4.5e-5`, `10`)
+* `col_time()`: can give a `format`, see `?col_time` for options
+* `col_date()`: can give a `format`, see `?col_date` for options
+* `col_datetime()`: can give a `format`, see `?col_datetime` for options
+
+Try this example, using the `nmesPROCcoltypes.csv` data file:
+```{r}
+nmesData <- read_csv("data/nmesPROCcoltypes.csv")
+nmesData %>% print(width = Inf)
+
+nmesData$dob
+nmesData$mid_init
+```
+
+Here we see that R made `dob` a character rather than a date and it made `mid_init` a logical rather than a character.  We can fix this by choosing the types ourselves.  We can first use `spec()` to get the full list of specifications:
+```{r}
+nmesData <- read_csv("data/nmesPROCcoltypes.csv")
+spec(nmesData)
+```
+
+And then we can change the specification for `dob` and `mid_init`.   Here we choose `dob = col_date(format="%m/%d/%y")` as the specification for date of birth.  We specify that the format the date is given is "month/day/year" where we choose the symbols to represent month and day and year from the list under *Format specification* in the help file for `col_date()`.  You can see this help file using `?col_date`.
+
+We choose `mid_init = col_character()` as the specification for middle initial to make sure this is read as a character.
+```{r}
+nmesData <- read_csv("data/nmesPROCcoltypes.csv", 
+                     col_types = cols(
+                       id = col_double(),
+                       totalexp = col_double(),
+                       lc5 = col_character(),
+                       chd5 = col_character(),
+                       eversmk = col_character(),
+                       current = col_character(),
+                       former = col_character(),
+                       packyears = col_double(),
+                       yearsince = col_double(),
+                       bmi = col_double(),
+                       beltuse = col_character(),
+                       educate = col_character(),
+                       marital = col_double(),
+                       poor = col_character(),
+                       age = col_double(),
+                       female = col_character(),
+                       mscd = col_character(),
+                       ageCat = col_character(),
+                       dob = col_date(format="%m/%d/%y"),
+                       mid_init = col_character()
+                       )
+)
+
+nmesData %>% print(width = Inf)
+
+nmesData$dob
+nmesData$mid_init
+```
+
+A couple of interesting things to notice here!  First, you can perhaps now see why `readr` mis-guessed the type for `mid_init`, since all the middle initials are T or F!
+
+You also might notice that some individuals have birthdates in the future!  This is because the `%y` specification reads a 2-digit year where digits 00-69 are 2000-2069 and digits 70-99 are 1970-1999.  You can find this information in the help file.  This is a reason why it is generally better practice to ALWAYS code dates with a 4-digit year, to avoid any ambiguity about what century the 2-digit year might refer to!
+
+
+Alternatively, we could just specify the column types of the columns we want to fix:
+```{r}
+nmesData <- read_csv("data/nmesPROCcoltypes.csv",
+                     col_types = cols(
+                       dob = col_date(format="%m/%d/%y"),
+                       mid_init = col_character())
+                     )
+nmesData %>% print(width=Inf)
+```
+
+It's good practice, however, to give the full column specification for a file once you've determined the best way to parse the data so your results will be reproducible in the future!
+
+If `readr` has trouble parsing the file, you will get a warning message.  You can then use the `problems()` function to try to figure out what went wrong.
+
+Try, for example, the following code which uses `read_csv` to read in a vector of mixed numeric and character type, while indicating that the data should be numeric (double). This results in a warning, and the `problems` function can be used to see why the warning is occurring:
+```{r}
+y <- read_csv(I("x\n1\n2\nb"), col_types = list(col_double()))
+y
+problems(y)
+```
+
+You can then resolve the problem either by fixing the data in the original file, if it is wrong, or altering your code to more flexibly handle the column of mixed type.
+
+## Writing to a file
+
+If you want to save your data frame or tibble once you've worked on it, you can write it back to a csv file using the `write_csv()` function.  This increases the chance the output file will be be read back in correctly later:
+
+```{r}
+write_csv(nmesData, file="data/nmesMINE.csv")
+```
