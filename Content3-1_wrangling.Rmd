@@ -233,7 +233,7 @@ Let's go back to our original NMES data:
 nmesData <- read_csv("data/nmesPROC.csv")
 ```
 
-We can see the variable types that `readr` has guessed in these specifications.  We can also define the specifications ourselves, if we want something different that what `readr` has chosen.  This is particularly useful if `readr` guesses wrong or we want something different that what's been chosen:
+We can see the variable types that `readr` has guessed in these specifications.  We can also define the specifications ourselves. This is particularly useful if `readr` guesses wrong or we want something different than what's been chosen:
 ```{r}
 nmesData <- read_csv("data/nmesPROC.csv", 
                      col_types = cols(
