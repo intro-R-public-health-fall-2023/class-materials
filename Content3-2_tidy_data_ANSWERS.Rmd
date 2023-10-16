@@ -1,0 +1,181 @@
+---
+title: "Content 3-2: Answers to practice questions"
+date: "Monday, October 16, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 3-2. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages.
+```{r}
+library(tidyverse)
+```
+
+# Tidy data
+
+## Practice
+
+1. Can you figure out how to calculate the disease rate per country per year (`rate` above) using the data in `table2`?
+```{r}
+# separate the cases from the population
+table2_cases <- table2 %>%
+  filter(type == "cases")
+table2_pop <- table2 %>%
+  filter(type == "population")
+
+# calculate the rate
+rate <- table2_cases$count/table2_pop$count*10000
+rate
+```
+
+**Hopefully you see this is hard to do, and would be even harder if we wanted to add this `rate` variable back to our dataset in a meaningful way!**
+
+2. Can you recreate the plot above showing change in cases over time using the data in `table2`? What do you need to do first?
+```{r}
+# First we need to filter to just get the cases
+# Then we can rename `count` to be cases
+# And use the same code as before
+table2 %>%
+  filter(type == "cases") %>%
+  rename(cases = count) %>%
+  ggplot(mapping = aes(x = year, y = cases, color = country)) +
+  geom_point() +
+  geom_line()
+```
+
+## Common problems with untidy data
+
+# Making a dataset *longer*
+
+## Practice
+
+3. Why doesn't this code work?
+```{r eval=FALSE}
+table4a %>%
+  pivot_longer( c(1999, 2000), 
+                names_to = "year", values_to = "cases")
+```
+
+**Valid variable names in R cannot start with a number!  So we need to put tick marks around these column names for R to recognize them as variables.**
+
+4. Use `pivot_longer()` to also put `table4b` in a tidy format.
+```{r}
+table4b %>% 
+  pivot_longer( c(`1999`, `2000`), 
+                names_to = "year", values_to = "population")
+```
+
+5. Now we can then join `table4a` and `table4b` together using the `left_join()` function from the `dplyr` package.  Run this code to see the resulting tidy dataset that matches `table1`!
+```{r}
+tidy4a <- table4a %>%
+  pivot_longer( c(`1999`, `2000`), 
+                names_to = "year", values_to = "cases")
+  
+tidy4b <- table4b %>%
+  pivot_longer( c(`1999`, `2000`), 
+                names_to = "year", values_to = "population")
+
+tidy4 <- left_join(tidy4a, tidy4b)
+tidy4
+```
+
+# Making a dataset *wider*
+
+## Practice
+
+6. Tidy the data below.  Do you need to use `pivot_longer()` or `pivot_wider()`?  What are the variables?
+
+**In this case `male` and `female` are values of a variable (sex) rather than variables themselves.  So we need to use `pivot_longer()` to put these values into a `sex` variable.**
+
+```{r}
+preg <- tribble(
+  ~pregnant, ~male, ~female,
+  "yes",     NA,    10,
+  "no",      20,    12
+)
+
+preg
+
+# use pivot_longer() to create a `sex` variable containing the male/female values
+# want to create a `count` variable containg the counts for these sexes
+preg %>%
+  pivot_longer( c(male, female),
+                names_to = "sex", values_to = "count")
+```
+
+7. Tidy the data below.  Do you need to use `pivot_longer()` or `pivot_wider()`?  What are the variables?
+
+**In this case the `measure` column contains two variables -- age and height.  We need to use `pivot_wider()` to split these variables into their own columns.**
+
+```{r}
+characteristics <- tibble(
+  name   = c("Ann","Ann","Barbara","Barbara"),
+  measure  = c("age", "height",  "age", "height"),
+  value = c(45, 67, 32, 60)
+)
+
+characteristics
+
+# The names of the new variables (age, height) come from the `measure` column
+# The values in these new variables come from the `value` column
+characteristics %>%
+  pivot_wider(names_from = measure, values_from = value)
+```
+
+
+# Separating and uniting
+
+## Splitting a cell with `separate()`
+
+## Practice
+
+8. What's the difference between these two chunks of code?
+
+**The second chunk of code uses the `remove = FALSE` option to keep the original column as well as the two newly created columns.  The default is to remove the old column, so you must specify you want to keep it.  This can be helpful for comparing old and new to see if the separation was done correctly!**
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep="/")
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), 
+           sep="/", 
+           remove = FALSE)
+```
+
+9. Can you figure out what happens when we give `sep` a number instead of a character?
+
+**Giving `sep` a number instead of a character tells which numeric position to separate the variable by.  With `sep = 2`, we are separating after the second position.  With `sep = 3`, we are separating after the third position.**
+
+```{r}
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2)
+
+table3 %>% 
+  separate(country, into = c("abbrev", "extra"), sep = 3)
+```
+
+## Combining cells with `unite()`
+
+# Case study
+
+10. We could do this whole process at once without saving the intermediate dataset using the pipe.  What would that look like? 
+```{r}
+who_tidy <- who %>% 
+  pivot_longer(new_sp_m014:newrel_f65, 
+               names_to = "key", 
+               values_to = "cases", 
+               values_drop_na = TRUE) %>%
+  mutate(key = stringr::str_replace(key, "newrel", "new_rel")) %>%
+  separate(key, into = c("new", "type", "sex_age"), sep = "_") %>%
+  separate(sex_age, into = c("sex", "age"), sep = 1)
+
+who_tidy
+```
