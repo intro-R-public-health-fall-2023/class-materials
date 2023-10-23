@@ -410,7 +410,7 @@ nmesRAW %>%
   count(eversmk, eversmk_recode)
 ```
 
-(4) Finally, once you are happy with your recoding, you can over-write your original variable with the recorded one and remove the recoded one!
+(4) Finally, once you are happy with your recoding, you can over-write your original variable with the recoded one and remove the recoded one!
 ```{r}
 nmesRAW <- nmesRAW %>%
   mutate(eversmk = eversmk_recode) %>%
