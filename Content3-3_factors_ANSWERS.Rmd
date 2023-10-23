@@ -1,0 +1,233 @@
+---
+title: "Content 3-3: Answers to practice questions"
+date: "Monday, October 23, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 3-3. 
+
+In order for the code in this document to work, we must still load the `tidyverse` family of packages.
+```{r}
+library(tidyverse)
+```
+
+# Factors
+
+## Practice
+
+1. What levels does the `rincome` variable have?  Make a barplot showing the distribution of this variable.  Is it easy to interpret this barplot?
+
+**The `rincome` variable has 16 different levels: "No answer", "Don't know", "Refused", "Not applicable", and then 12 different income categories ranging from "Lt $1000" to "$25000 or more".  There are at least some individuals in each of these 16 categories.**
+
+```{r}
+levels(gss_cat$rincome)
+
+gss_cat %>% 
+  count(rincome)
+```
+
+**For the barplot, it's hard to read all the category names at the bottom.**  
+```{r}
+gss_cat %>% 
+  ggplot(mapping = aes(x = rincome)) + 
+  geom_bar()
+```
+
+**We can rotate these names to get a better look.  After rotation, we can read all the categories, but interpretation is still hard since the income categories are in reverse order (highest to lowest) and all the other categories (no answer, etc) are right at the beginning.**  
+```{r}
+gss_cat %>% 
+  ggplot(mapping = aes(x = rincome)) + 
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+2. What is the most common level of `relig` in this survey? What’s the most common level of `partyid`?
+
+**The most commoin level of `relig` is "Protestant".  The most common level of `partyid` is "Independent."  Note you can sort the counts by the highest to lowest by using the option `sort = TRUE`.**
+```{r}
+gss_cat %>% 
+  count(relig)
+
+gss_cat %>%
+  count(relig, sort = TRUE)
+
+gss_cat %>% 
+  count(partyid, sort = TRUE)
+```
+
+3. Which `relig` does `denom` (denomination) apply to? How can you find out with a table? How can you find out with a visualisation?
+
+**Let's start by counting `relig` and `denom` together.  I will use the `sort = TRUE` option to put the more common choices at the top.  It looks like the `denom` variable is "Not applicable" or "No denomination" for many of the `relig` levels except for "Protestant".**
+```{r}
+gss_cat %>% 
+  count(relig, denom)
+
+gss_cat %>% 
+  count(relig, denom, sort = TRUE)
+```
+
+**We could also see this with a visualization by mapping one aesthetic to `relig` and another to `denom`.  Or alternatively faceting by one of them. Here we see that it's the "Protestant" category that has different denominations.**
+```{r}
+gss_cat %>% 
+  ggplot(mapping = aes(x = relig, fill = denom)) + 
+  geom_bar() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 90))
+```
+
+# Changing factor order
+
+## Practice
+
+(1) Look at the levels for each factor variable in the `gss_cat` data set.  For each of these factor variables, are the order of the levels arbitrary or meaningful?
+
+**Income has a meaningful ordering by amount of income.  Party ID could also be considered a meaningful ordering, since the levels move along a spectrum from Republican to Democrat.  None of the other factor variables has a meaningful order.**
+```{r}
+gss_cat
+
+levels(gss_cat$marital)
+levels(gss_cat$race)
+levels(gss_cat$rincome)
+levels(gss_cat$partyid)
+levels(gss_cat$relig)
+levels(gss_cat$denom)
+```
+
+(2) Why did moving “Not applicable” to the front of the levels in our income/tv plot move it to the bottom of the plot?
+
+**Because the first factor level is plotted where the 1 would be on the x-axis, the second level is plotted where the 2 would be, etc.  So the first level is at the bottom of the plot.**
+```{r}
+rincome_summary <- gss_cat %>%
+  group_by(rincome) %>%
+  summarise(
+    mean_age = mean(age, na.rm = TRUE),
+    mean_tv = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+rincome_summary %>%
+  ggplot(mapping = aes(x = mean_tv, y = rincome)) + 
+  geom_point()
+
+rincome_summary %>%
+  mutate(rincome = fct_relevel(rincome, "Not applicable")) %>%
+  ggplot(mapping = aes(x = mean_tv, y = rincome)) + 
+  geom_point()
+```
+
+# Modifying factor levels
+
+## Practice
+
+(1) How might you collapse `rincome` into a small set of categories?  Does it make sense to use `fct_lump()` or is it better to use `fct_collapse()`?
+
+**It doesn't make sense to use `fct_lump()` here, since the "Other" group will include a wide disparity of income levels.  For example, if we collape to 4 levels, the "Other" category will contain those incomes < 10,000 but also those between 15,000 and 20,000.:**
+```{r}
+gss_cat %>%
+  count(rincome)
+
+gss_cat %>%
+  mutate(rincome_lumped = fct_lump(rincome, n=4)) %>%
+  count(rincome_lumped)
+```
+
+**It makes more sense to use `fct_collapse()` to specify large income categories, such as in increments of 5,000:**
+```{r}
+gss_cat %>%
+  mutate(rincome_new = fct_collapse(rincome,
+    "0-5k" = c("Lt $1000", "$1000 to 2999", "$3000 to 3999", "$4000 to 4999"),
+    "5-10k" = c("$5000 to 5999", "$6000 to 6999", "$7000 to 7999", "$8000 to 9999"),
+    "10-15k" = c("$10000 - 14999"),
+    "15-20k" = c("$15000 - 19999"),
+    "20-25k" = c("$20000 - 24999"),
+    "25k+" = c("$25000 or more")
+  )) %>%
+  count(rincome_new)
+```
+
+
+# Re-coding with the NMES data set
+
+## Practice
+
+(1) Recode the `beltuse` variable to a factor variable according to the following codebook:
+
+     * ` beltuse`: 1 = Rarely, 2 = Sometimes, 3 = Always/Almost always
+
+```{r}
+# Need to read in the data for this ANSWERS document
+nmesRAW <- read_csv("data/nmesUNPROC.csv")
+
+nmesRAW %>%
+  count(beltuse)
+
+nmesRAW <- nmesRAW %>%
+  mutate(beltuse_recoded = fct_recode(factor(beltuse),
+                                         "Rarely" = "1",
+                                         "Sometimes" = "2",
+                                         "Always/Almost always" = "3"))
+
+nmesRAW %>%
+  count(beltuse, beltuse_recoded)
+
+nmesRAW <- nmesRAW %>%
+  mutate(beltuse = beltuse_recoded) %>%
+  select(-beltuse_recoded)
+
+nmesRAW
+```
+
+(2) Create a new factor variable named `beltAlways` that has two levels: `Always` which includes the "Always/Almost always" levels and `Not Always` which has the other 2 levels.
+
+**We can build on the recoded factor `beltuse` variable from (1) and use `fct_collapse()` to combine the two categories:**
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(beltAlways = fct_collapse(beltuse,
+                      "Always" = "Always/Almost always",
+                      "Not Always" = c("Rarely", "Sometimes")
+                      ))
+
+nmesRAW %>% print(width = Inf)
+```
+
+(3) This raw dataset doesn't contain an `MSCD` variable.  We can create one from the `lc5` and `chd5` variables.  The codebook for these two variables is given below.  Create an `MSCD` variable as a factor variable with the levels `No MSCD` and `MSCD`.
+
+     * `lc5`: 1 = Lung Cancer, Laryngeal Cancer or COPD, 0 = None of these
+     * `chd5`: 1 = CHD, Stroke, and other cancers (oral, esophageal, stomach, kidney and bladder), 0 = None of these
+
+**To do this, first we need to create an `mscd` variable that combines the `lc5` and `chd5` information to say if they have either of these diseases.  Then let's count this variable to see the levels:**
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(mscd = (lc5 == 1) | (chd5 == 1) )
+
+nmesRAW %>%
+  count(mscd)
+```
+
+**Since this new variable is a logical `<lgl>` variable with values `TRUE`/`FALSE`, we now need to convert to a factor and assign values:**
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(mscd_recode = factor(mscd)) %>%
+  mutate(mscd_recode = fct_recode(mscd_recode,
+    "MSCD" = "TRUE",
+    "No MSCD" = "FALSE"
+  ))
+
+nmesRAW %>% count(mscd, mscd_recode)
+```
+
+**Now over-write the `mscd` variable and remove the `mscd_recode`**:
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(mscd = mscd_recode) %>%
+  select(-mscd_recode)
+
+nmesRAW %>% print(width = Inf)
+```

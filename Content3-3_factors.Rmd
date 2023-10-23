@@ -1,0 +1,459 @@
+---
+title: "Content 3-3: Factors"
+date: "Monday, October 23, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In Module 3, we are learning about "data wrangling", which is the process of getting data into `R` and into the right format for making graphs and doing statistical analyses.  In Class 3-3, we will learn about representing variables as **factors**.  We will use the `forcats` package to do this.  The `forcats` package is part of the `tidyverse`.
+
+*Note:* These class activities are adapted from "R for Data Science" by Grolemund and Wickham, chapter 15.  You can find this chapter [here](https://r4ds.had.co.nz/factors.html).
+
+Load the `tidyverse` group of packages to have access to the `forcats` package.
+```{r}
+library(tidyverse)
+```
+
+# Factors
+
+We use *factors* in R to work with *categorical* variables. Categorical variables are variables that have a fixed and known set of possible values (or categories). For example, eye color would be a categorical variable with possible values brown, hazel, blue, green, gray, and amber.
+
+Why might we want to use factors instead of just working with character vectors?  Let's explore this...
+
+Consider the following character vector:
+```{r}
+x1 <- c("Mar","Apr","May","Sep","Oct","Dec")
+```
+
+What happens when you sort it? Is the ordering meaningful?
+```{r}
+sort(x1)
+```
+
+`R` sorts character vectors by alphabetical order, which is fine if there's no reason to want these values to have a particular order.  However, in this case (an in many others) we want to control the ordering of the categories of our variable.
+
+We can define this vector as a factor instead.  To do this we first create the list of **levels** that the variable can take and then convert the vector into a factor:
+```{r}
+month_levels <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+y1 <- factor(x1, levels = month_levels)
+y1
+```
+
+Now what happens when we sort it? It sorts according to the order we've defined our levels!
+```{r}
+sort(y1)
+```
+
+Defining as a factor also protect us from typos; values that are not one of the pre-defined levels are converted to `NA`:
+```{r}
+x2 <- c("Mar","Apt","May","Sept","Oct","Dec")
+y2 <- factor(x2, levels = month_levels)
+y2
+```
+
+If you don't explicitly specify the levels that you want, then `R` uses all the *unique* values as levels and orders them alphabetically:
+```{r}
+x1 <- c("Mar","Apr","May","Sep","Oct","Dec")
+z1 <- factor(x1)
+z1
+```
+
+Or, you can use all the unique values as levels but order them in the order they appear in the vector:
+```{r}
+x1 <- c("Mar","Apr","May","Sep","Oct","Dec")
+z2 <- factor(x1, levels = unique(x1))
+z2
+```
+
+As we've seen before, you can access the order of the factor levels with the `levels()` function:
+```{r}
+levels(y1)
+levels(z1)
+levels(x1)
+```
+
+Note that this last vector, `x1`, doesn't have any levels, because it isn't a factor.  It's our original character vector!
+
+You may wonder why we care so much about the order of the factor levels.  Being able to put the levels in order can be very helpful for plotting and modeling purposes!  We'll see how this can be useful for plotting purposes later in this document.  For modeling purposes, the usefulness is in choosing which levels you want to compare in your model!
+
+We'll look at factors using a set of data from the General Social Survey (GSS), that is stored in the object `gss_cat`.  Take a look at this dataset:
+```{r}
+gss_cat
+```
+
+You can see that many of the variables in this data set have already been made into factors, as seen by the `<fct>` under the variable name.  If we want to see the possible levels for a particular factor, we can do this in a couple of ways.  Take, for example, the `race` variable:
+```{r}
+levels(gss_cat$race)
+
+gss_cat %>%
+  count(race)
+```
+
+In the first case, using `levels()`, we see there are 4 possible levels in the order of: "Other", "Black", "White", and "Not applicable".  From the second case, using `count()`, we see that only 3 of these levels actually occur in our data, since there are no "Not applicable" values. Notice that the `count()` function will display the possible values in the order given for the particular factor.  
+
+Likewise, if we make a barplot to show the number of people in each racial category, the categories are displayed in this order as well:
+```{r}
+gss_cat %>%  
+  ggplot(mapping = aes(x = race)) + 
+  geom_bar()
+```
+
+## Practice
+
+1. What levels does the `rincome` variable have?  Make a barplot showing the distribution of this variable.  Is it easy to interpret this barplot?
+```{r}
+
+```
+
+2. What is the most common level of `relig` in this survey? What’s the most common level of `partyid`?
+```{r}
+
+```
+
+3. Which `relig` does `denom` (denomination) apply to? How can you find out with a table? How can you find out with a visualisation?
+```{r}
+
+```
+
+# Changing factor order
+
+It can be helpful to change the order of factor levels for a visualization or a table.
+
+Consider the relationship between the average number of hours spent watching TV per day and religion.  We can calculate an average hour spent watching TV (and average age) using `group_by()` and then `summarize()`:
+```{r}
+relig_summary <- gss_cat %>%
+  group_by(relig) %>%
+  summarize(
+    mean_age = mean(age, na.rm = TRUE),
+    mean_tv = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+relig_summary
+```
+
+Then we can plot the average TV hours by religion:
+```{r}
+relig_summary %>%
+  ggplot(mapping = aes(x = mean_tv, y = relig)) + 
+  geom_point()
+```
+
+We can make this plot easier to read by ordering the levels of `relig` by their mean hours of tv.  We can do this with the `fct_reorder()` function, which takes a factor (the first argument) and reorders it by another variable (the second argument):
+```{r}
+relig_summary %>%
+  ggplot(mapping = aes(x = mean_tv, y = fct_reorder(relig, mean_tv))) + 
+  geom_point()
+```
+
+Ordering the plot in this way makes it easy to see which religious groups have the highest average TV hours and which ones have the lowest.
+
+A clearer way to write this code would be the following.  Why?  Because it take the re-ordering of the `relig` categories outside of the plotting functions.  It's good practice to transform and re-order your variables *before* making your plots!
+```{r}
+relig_summary %>%
+  mutate(relig = fct_reorder(relig, mean_tv)) %>%
+  ggplot(mapping = aes(x = mean_tv, y = relig)) + 
+  geom_point()
+```
+
+Here's a similar ordered plot where we look at the relationship between the levels of `rincome` and mean hours of tv:
+```{r}
+rincome_summary <- gss_cat %>%
+  group_by(rincome) %>%
+  summarise(
+    mean_age = mean(age, na.rm = TRUE),
+    mean_tv = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+rincome_summary %>%
+  mutate(rincome = fct_reorder(rincome, mean_tv)) %>%
+  ggplot(mapping = aes(x = mean_tv, y = rincome)) + 
+  geom_point()
+```
+
+Does it make it more interpretable to order the income levels by TV usage?  Here the income values have a natural ordering to them already, so it's not helpful to re-order them by a second variable.  If we don't re-order them, what do we get?
+```{r}
+rincome_summary %>%
+  ggplot(mapping = aes(x = mean_tv, y = rincome)) + 
+  geom_point()
+```
+
+Instead, for income, we might want to re-order the levels to put `Not applicable` at the end with the other special levels.  We can do this with the `fct_relevel()` function, which takes a factor (the first argument) and moves the variables in the remaining arguments to the front of the line of levels:
+```{r}
+rincome_summary %>%
+  mutate(rincome = fct_relevel(rincome, "Not applicable")) %>%
+  ggplot(mapping = aes(x = mean_tv, y = rincome)) + 
+  geom_point()
+```
+
+If we wanted to rearrange all of those special levels, we could do:
+```{r}
+rincome_summary %>%
+  mutate(rincome = fct_relevel(rincome, "Refused", "No answer", "Don't know", "Not applicable")) %>%
+  ggplot(mapping = aes(x = mean_tv, y = rincome)) + 
+  geom_point()
+```
+
+In these last two plots, we can see a general trend that individuals with lower incomes tend to watch more TV, on average.  However, this trend isn't perfect, since the  `mean_tv` ordering is not exactly the same as the `rincome` ordering.
+
+Here are a couple of other ways to re-order the levels of your factor variable that are specific to making nicer graphics:
+
+(1) For plots with colored lines, we can use `fct_reorder2()` to reorder the factor levels by the `y` values associated with the largest `x` values (the values at the far right of the plot).  This makes the colors of the lines match the same order as the colors of the legend. 
+
+**BEFORE:**
+```{r}
+by_age <- gss_cat %>%
+  filter(!is.na(age)) %>%
+  count(age, marital) %>%
+  group_by(age) %>%
+  mutate(prop = n / sum(n))
+
+by_age %>%
+  ggplot(mapping = aes(x = age, y = prop, color = marital)) +
+  geom_line(na.rm = TRUE)
+```
+
+**AFTER:**
+```{r}
+by_age %>%
+ggplot(mapping = aes(x = age, y = prop, color = fct_reorder2(marital, age, prop))) +
+  geom_line()
+```
+
+**And we can also fix the label for the legend to be nicer:**
+```{r}
+by_age %>%
+ggplot(mapping = aes(x = age, y = prop, color = fct_reorder2(marital, age, prop))) +
+  geom_line() + 
+  labs(color = "Marital status")
+```
+
+(2) For bar plots, we can use `fct_infreq()` to order the factor levels in increasing frequency.  We can then use `fct_rev()` to reverse the order of the factor levels:
+
+**BEFORE:**
+```{r}
+gss_cat %>%
+  ggplot(mapping = aes(x = marital)) +
+    geom_bar()
+```
+
+**AFTER:**
+```{r}
+gss_cat %>%
+  mutate(marital = fct_infreq(marital)) %>%
+  ggplot(aes(marital)) +
+    geom_bar()
+```
+
+**IN REVERSE:**
+```{r}
+gss_cat %>%
+  mutate(marital = fct_rev(fct_infreq(marital))) %>%
+  ggplot(aes(marital)) +
+    geom_bar()
+```
+
+
+## Practice
+
+(1) Look at the levels for each factor variable in the `gss_cat` data set.  For each of these factor variables, are the order of the levels arbitrary or meaningful?
+```{r}
+gss_cat
+
+levels(gss_cat$marital)
+levels(gss_cat$race)
+levels(gss_cat$rincome)
+levels(gss_cat$partyid)
+levels(gss_cat$relig)
+levels(gss_cat$denom)
+```
+
+(2) Why did moving “Not applicable” to the front of the levels in our income/tv plot move it to the bottom of the plot?
+```{r}
+rincome_summary <- gss_cat %>%
+  group_by(rincome) %>%
+  summarise(
+    mean_age = mean(age, na.rm = TRUE),
+    mean_tv = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+rincome_summary %>%
+  ggplot(mapping=aes(x=mean_tv, y=rincome)) + 
+  geom_point()
+
+rincome_summary %>%
+  mutate(rincome = fct_relevel(rincome, "Not applicable")) %>%
+  ggplot(mapping=aes(x=mean_tv, y=rincome)) + 
+  geom_point()
+```
+
+# Modifying factor levels
+
+Being able to change the values of the factor levels themselves is more useful than just changing the order of the levels.  The main tool to do this in the `forcats` packages is the `fct_recode()` function.
+
+Suppose, for example, we wanted to change the levels of the `partyid` variable in the `gss_cat` data set:
+```{r}
+gss_cat %>% count(partyid)
+```
+
+We might want to change the levels to put political party first (Republican, Democrat, Independent) to make it easier to compare the levels to each other:
+```{r}
+gss_cat %>%
+  mutate(partyid = fct_recode(partyid,
+    "Republican, strong"    = "Strong republican",
+    "Republican, weak"      = "Not str republican",
+    "Independent, near rep" = "Ind,near rep",
+    "Independent, near dem" = "Ind,near dem",
+    "Democrat, weak"        = "Not str democrat",
+    "Democrat, strong"      = "Strong democrat"
+  )) %>%
+  count(partyid)
+```
+
+See here that the first argument to the `fct_recode()` function is the variable we want to recode.  The remaining arguments give the changes we want to the levels, in the format of `new level name` = `old level name`. Any old level names that we don't include in our changes will remain the same, as is the case for `Indpendent`, `No answer`, `Don't know`, and `Other party` in this example.
+
+We can also use this function to combine groups by assigning the same `new level name` to multiple old level names.  (Remember to only combine levels that it makes sense to combine!)
+```{r}
+gss_cat %>%
+  mutate(partyid = fct_recode(partyid,
+    "Republican, strong"    = "Strong republican",
+    "Republican, weak"      = "Not str republican",
+    "Independent, near rep" = "Ind,near rep",
+    "Independent, near dem" = "Ind,near dem",
+    "Democrat, weak"        = "Not str democrat",
+    "Democrat, strong"      = "Strong democrat",
+    "Other"                 = "No answer",
+    "Other"                 = "Don't know",
+    "Other"                 = "Other party"
+  )) %>%
+  count(partyid)
+```
+
+If we need to collapse a lot of levels, we can use the `fct_collapse()` function instead of `fct_recode()` by providing a list of the old levels we want to combine into a new level:
+```{r}
+gss_cat %>%
+  mutate(partyid = fct_collapse(partyid,
+    Other = c("No answer", "Don't know", "Other party"),
+    Republican = c("Strong republican", "Not str republican"),
+    Independent = c("Ind,near rep", "Independent", "Ind,near dem"),
+    Democrat = c("Not str democrat", "Strong democrat")
+  )) %>%
+  count(partyid)
+```
+
+And if we want to lump all the smaller categories together into an "Other" group, we can use `fct_lump()` to do this, specifying that we want to keep the `n` largest categories distinct but putting the rest in an "Other" category:
+```{r}
+gss_cat %>%
+  mutate(relig_lumped = fct_lump(relig, n = 10)) %>%
+  count(relig_lumped)
+
+gss_cat %>%
+  mutate(relig_lumped = fct_lump(relig, n = 5)) %>%
+  count(relig_lumped)
+```
+
+Again, we should always be careful when we combine categories together.  Using `fct_lump()` is a tool for making tables and plots simpler by having a smaller number of categories, but the resulting "Other" category has lost information about the individual categories that have been lumped together!
+
+## Practice
+
+(1) How might you collapse `rincome` into a small set of categories?  Does it make sense to use `fct_lump()` or is it better to use `fct_collapse()`?
+```{r}
+gss_cat %>%
+  count(rincome)
+```
+
+# Re-coding with the NMES data set
+
+For your Assignment #3, you will read in a raw version of the NMES dataset and re-code it to match a provided codebook.  We will work through a couple of the variables here as examples.  
+
+First, read in the raw NMES data:
+```{r}
+nmesRAW <- read_csv("data/nmesUNPROC.csv")
+
+nmesRAW
+```
+
+Notice that each variable in this dataset is of type `double`.  This is because all values in this dataset are saved in a numeric format.  However, for many of these variables the numbers really represents a category!  For example, for the `eversmk` variable, the `0` represents a never smoker and the `1` represents a never smoker.  So this variable would be better represented as a factor variable.
+
+We can convert this variable in the following way:
+
+(1) First, convert this variable to a factor using the `factor()` function. The look to see what the original level values are.  It can be helpful to check that the `factor()` function preserved the original values by counting by both the old and new versions of the variable.
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(eversmk_recode = factor(eversmk))
+
+nmesRAW %>%
+  count(eversmk, eversmk_recode)
+```
+
+(2) Refer to the codebook to see what these values actually mean; that is, what category (factor level) does each value represent.  Here we would be told that `0` represents a never smoker and the `1` represents a never smoker.
+
+(3) Next recode the factor levels using `fct_recode()` and check the new labels with the old:
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(eversmk_recode = fct_recode(eversmk_recode,
+                                     "Never smoker" = "0",
+                                     "Ever smoker" = "1"
+                                     ))
+
+nmesRAW %>%
+  count(eversmk, eversmk_recode)
+```
+
+(4) Finally, once you are happy with your recoding, you can over-write your original variable with the recorded one and remove the recoded one!
+```{r}
+nmesRAW <- nmesRAW %>%
+  mutate(eversmk = eversmk_recode) %>%
+  select(-eversmk_recode)
+
+nmesRAW
+```
+
+Eventually, you may become confident enough in your coding to simply recode the original variable right away, without checking the new values with the old ones, as below.  However, when you're starting it can be useful to check your recoding as you go, so you are sure you are re-coding the way you think you are re-coding!
+```{r}
+nmesRAW <- read_csv("data/nmesUNPROC.csv")
+
+nmesRAW <- nmesRAW %>%
+  mutate(eversmk = fct_recode(factor(eversmk),
+                              "Never smoker" = "0",
+                              "Ever smoker" = "1"
+                              ))
+
+nmesRAW
+  
+```
+
+## Practice
+
+(1) Recode the `beltuse` variable to a factor variable according to the following codebook:
+
+     * ` beltuse`: 1 = Rarely, 2 = Sometimes, 3 = Always/Almost always
+
+```{r}
+
+```
+
+(2) Create a new factor variable named `beltAlways` that has two levels: `Always` which includes the "Always/Almost always" levels and `Not Always` which has the other 2 levels.
+```{r}
+
+```
+
+(3) This raw dataset doesn't contain an `MSCD` variable.  We can create one from the `lc5` and `chd5` variables.  The codebook for these two variables is given below.  Create an `MSCD` variable as a factor variable with the levels `No MSCD` and `MSCD`.
+
+     * `lc5`: 1 = Lung Cancer, Laryngeal Cancer or COPD, 0 = None of these
+     * `chd5`: 1 = CHD, Stroke, and other cancers (oral, esophageal, stomach, kidney and bladder), 0 = None of these
+
+```{r}
+
+```
+
