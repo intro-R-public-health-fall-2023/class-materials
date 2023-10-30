@@ -1,0 +1,172 @@
+---
+title: "Content 4-1: Answers to practice questions"
+date: "Monday, October 30, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+```
+
+This document contains answers to the practice questions in Content 4-1. 
+
+# What is a function?
+
+# Why should you use functions?
+
+# When should you use functions?
+
+# How to write a function
+
+# Practice 
+
+1. See what happens when we delete the `rescale01()` function from our environment and then try to run the following code:
+```{r}
+# remove/delete the rescale01 function
+rm(rescale01)
+
+rescale01(df$a)
+rescale01(df$b)
+rescale01(df$c)
+rescale01(df$d)
+```
+How can you fix this problem?
+
+**When we delete the `rescale01` function, we can no longer use the function because R doesn't know what `rescale01` is.  See the error message: `Error in rescale01(df$a) : could not find function "rescale01"`**
+
+**In order to use this function again, we must re-define it by running the code chunk that contains its definition:**
+```{r}
+rescale01 <- function(x) {
+  min_x <- min(x[is.finite(x)], na.rm = TRUE)
+  max_x <- max(x[is.finite(x)], na.rm = TRUE)
+  
+  (x - min_x) / (max_x - min_x)
+}
+```
+
+2. Turn the following code into a function.  Think about what the function does. What would you call it? How many arguments does it need? Can you rewrite it to be more expressive or less duplicative?
+```{r eval = FALSE}
+mean(is.na(x))
+```
+
+**First, start with a vector, `x`, that we can use to try out the code.  Since the `is.na()` function is used in this code, let's make our vector have an `NA` value in it.**
+```{r}
+x <- c(1, NA, 3, 4, 5)
+mean(is.na(x))
+```
+
+**It looks like this code returns the proportion of missing values in a vector!  Let's call it `prop_NA` as an informative name. We only need one argument, the vector `x`.**
+```{r}
+prop_NA <- function(x) {
+  mean(is.na(x))
+}
+```
+
+**And now let's try it out!**
+
+```{r}
+prop_NA(c(-10, 0, 10))
+prop_NA(c(1, 2, 3, NA, 5))
+prop_NA(c(1:10, Inf))
+```
+
+2. Turn the following code into a function.  Think about what the function does. What would you call it? How many arguments does it need? Can you rewrite it to be more expressive or less duplicative?
+```{r eval = FALSE}
+x / sum(x, na.rm = TRUE)
+```
+
+**First, start with a vector, `x`, that we can use to try out the code.  Again, since there's an `na.rm = TRUE` option in the code, let's make our vector have an `NA` value in it.**
+```{r}
+x <- c(1, NA, 3, 4, 5)
+x / sum(x, na.rm = TRUE)
+```
+
+**It looks like this code returns the fraction of the total sum of the vector!  Let's call it `frac_sum` as an informative name. Again, there's only one argument, the vector `x`.**
+```{r}
+frac_sum <- function(x) {
+  x / sum(x, na.rm = TRUE)
+}
+```
+
+**And now let's try it out!**
+
+```{r}
+frac_sum(c(-10, 0, 10))
+frac_sum(c(1, 2, 3, NA, 5))
+frac_sum(c(1:10, Inf))
+```
+
+**You can see here that we will have problems when we have a sum that is equal to 0, since we can't divide by 0.  We will also have problems when we have infinite values!  We will talk more about how to deal with things like this later in this module.**
+
+3. Turn the following code into a function.  Think about what the function does. What would you call it? How many arguments does it need? Can you rewrite it to be more expressive or less duplicative?
+```{r eval = FALSE}
+sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+```
+
+**First, start with a vector, `x`, that we can use to try out the code.  Again, since there's an `na.rm = TRUE` option in the code, let's make our vector have an `NA` value in it.**
+```{r}
+x <- c(1, NA, 3, 4, 5)
+sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+```
+
+**It looks like this code returns the ratio of the standard deviation to the mean of a vector!  Let's call it `sd_mean_ratio` as an informative name. Again, there's only one argument, the vector `x`.**
+
+**We can also add some intermediate variables to make the code cleaner if we want.**
+```{r}
+sd_mean_ratio <- function(x) {
+  sd_x <- sd(x, na.rm = TRUE)
+  mean_x <- mean(x, na.rm = TRUE)
+  sd_x / mean_x
+}
+```
+
+**And now let's try it out!**
+
+```{r}
+sd_mean_ratio(c(-10, 0, 10))
+sd_mean_ratio(c(1, 2, 3, NA, 5))
+sd_mean_ratio(c(1:10, Inf))
+```
+
+**Again, we will have to think about how to handle dividing by 0 (when the mean is 0) and handling infinite values!  More on this to come!**
+
+4. Write `both_na()`, a function that takes two vectors of the same length and returns the number of positions that have an NA in both vectors.
+
+**We will have 2 inputs, so let's create 2 vectors to start building the code:**
+```{r}
+x <- c(1:10, NA)
+y <- c(1:10, NA)
+
+x
+y
+```
+
+**Now we need code for counting the number of positions where `x` and `y` are both `NA`:**
+```{r}
+# tells us how many NA in x and y separately
+sum(is.na(x))
+sum(is.na(y))
+
+# to get them both in the same position
+sum(is.na(x) == TRUE & is.na(y) == TRUE)
+```
+
+**Now let's turn that into a function:**
+```{r}
+both_na <- function(x,y) {
+  sum(is.na(x) == TRUE & is.na(y) == TRUE)
+}
+```
+
+**And test it out:**
+```{r}
+a <- c(NA, NA, 1, NA)
+b <- c(NA, 4, 5, NA)
+
+both_na(a,b)
+```
+
+# Tips for writing useable functions
