@@ -1,0 +1,236 @@
+---
+title: "Content 4-2: Answers to practice questions"
+date: "Monday, November 6, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document contains answers to the practice questions in Content 4-1. 
+
+# Recap from last week
+
+# Conditional execution
+
+## Choosing a condition
+
+## Combining multiple conditions
+
+## Code format
+
+## Practice
+
+1. Write a `is_it_hot` function. It takes a single number as input. If the number is greater than 85, it returns “hot”. If the number is less than or equal to 85, it returns "not hot".  Make sure you first write working code before you create the function.
+
+**Since we know there will be a single input, we can start with a generic input that we assign a number while we build our function.  Since it seems as though our input will represent a temperture, let's call this input `temp`.**
+```{r}
+temp <- 30
+```
+
+**We have two possible function outputs here -- "hot" and "not hot".  We want the first output when `temp > 85` and the second output when `temp <= 85`.  Since these two conditions are just complements of each other, and one of these two conditions must be true, we can create separate these two conditions with a single `if` statement:**
+```{r}
+temp <- 30
+
+if (temp > 85) {
+  "hot"
+} else {
+  "not hot"
+}
+
+temp <- 90
+
+if (temp > 85) {
+  "hot"
+} else {
+  "not hot"
+}
+
+```
+
+**Now we can wrap this in a function. Our function name is `is_it_hot` and it takes a single argument which we are calling `temp`.**
+```{r}
+is_it_hot <- function(temp) {
+  
+  if (temp > 85) {
+    "hot"
+    } else {
+      "not hot"
+    }
+  
+}
+
+is_it_hot(90)
+is_it_hot(85)
+is_it_hot(66)
+```
+
+**Note that you could have divided your condition the other way as well:**
+```{r}
+is_it_hot <- function(temp) {
+  
+  if (temp <= 85) {
+    "not hot"
+    } else {
+      "hot"
+    }
+  
+}
+
+is_it_hot(90)
+is_it_hot(85)
+is_it_hot(66)
+```
+
+2. Write a `thermostat` function. It takes a single number as input. If the number is less than or equal to 32, it returns “freezing”. If the number is more than 32 but less than or equal to 45, it returns "cold".  If it's more than 45 but less than or equal to 65, it returns "cool".  If more than 65 but less than or equal to 85, it returns "warm".  For greater than 85, it returns "hot".  Make sure you first write working code before you create the function.
+
+**Since we know there will be a single input, we can start with a generic input that we assign a number while we build our function.  Since it seems as though our input will represent a temperture, let's call this input `temp`.**
+```{r}
+temp <- 30
+```
+
+**We are going to need more than a single `if` statement here, since we will have to check a list of conditions.  We should either start by checking the lowest value or the highest value first, so either checking if `temp <= 32` or checking if `temp > 85` first.  Then we can continue to warmer or cooler values from there.  Since in #1 we started with "hot", let's do that again here:**
+
+```{r}
+temp <- 30
+
+if (temp > 85) {
+  "hot"
+} else {
+  
+}
+```
+
+**Now we need to fill in the next level, so if `temp > 85` is `FALSE`, we then want to check whether `temp > 65`:**
+```{r}
+temp <- 30
+
+if (temp > 85) {
+  "hot"
+} else if (temp > 65) {
+  "warm"
+} else {
+  
+}
+```
+
+**And now we can fill in the rest of the conditions, checking `temp > 45` and then `temp > 32`.  If none of these conditions are met, then we are left in the final "freezing" group:**
+```{r}
+temp <- 30
+
+if (temp > 85) {
+  "hot"
+} else if (temp > 65) {
+  "warm"
+} else if (temp > 45) {
+  "cool"
+} else if (temp > 32) {
+  "cold"
+} else {
+  "freezing"
+}
+```
+
+**Now we can wrap this in a function. Our function name is `thermostat` and it takes a single argument which we are calling `temp`.**
+```{r}
+thermostat <- function(temp) {
+  
+if (temp > 85) {
+  "hot"
+} else if (temp > 65) {
+  "warm"
+} else if (temp > 45) {
+  "cool"
+} else if (temp > 32) {
+  "cold"
+} else {
+  "freezing"
+}
+  
+}
+
+thermostat(90)
+thermostat(85)
+thermostat(42)
+```
+
+
+# Function arguments
+
+## Default values for detail arguments
+
+## Code style
+
+## Checking values
+
+## Passing arguments through to other functions using `...`
+
+## Practice
+
+3. Update your `is_it_hot` function (starting from the code below) to check to be sure the value `temp` is numeric and is only a single value (of length one).
+
+**First let's add an `if` and `stop` statement to check if `temp` is numeric:**
+
+```{r error = TRUE}
+is_it_hot <- function(temp) {
+  
+    if (!is.numeric(temp)) {
+    stop("`temp` must be a numeric vector")
+  }
+  
+  if (temp > 85) {
+    "hot"
+    } else {
+      "not hot"
+    }
+  
+}
+
+is_it_hot(90)
+is_it_hot("yes")
+```
+
+**Next we can also check to be sure `temp` has length 1.  We could do this in a separate `if/stop` statement or we can do it all at once:**
+
+```{r error = TRUE}
+is_it_hot <- function(temp) {
+  
+    if (!is.numeric(temp) | length(temp) > 1) {
+    stop("`temp` must be a numeric vector of length 1")
+  }
+  
+  if (temp > 85) {
+    "hot"
+    } else {
+      "not hot"
+    }
+  
+}
+
+is_it_hot(90)
+is_it_hot("yes")
+is_it_hot(c(90, 100, 45))
+```
+
+4. Update the function below to allow for a `na.rm` argument:
+
+**We just need to add a `...` argument to the function so that the `na.rm = TRUE` can be passed to the `mean()` and `sd()` functions within our function.  We need to add this `...` both to our newly created function and to the functions we want to allow the pass to.**
+```{r error = TRUE}
+mean_sd_ratio <- function(x, ...) {
+  mean_x <- mean(x, ...)
+  sd_x <- sd(x, ...)
+  
+  mean_x/sd_x
+  
+}
+
+mean_sd_ratio(x = c(1, 3, 4, NA))
+mean_sd_ratio(x = c(1, 3, 4, NA), na.rm = TRUE)
+```
+
+# Function return values
+
