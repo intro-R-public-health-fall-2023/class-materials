@@ -1,0 +1,311 @@
+---
+title: "Content 4-3: Answers to practice questions"
+date: "Monday, November 13, 2023"
+output: 
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+```
+
+This document contains answers to the practice questions in Content 4-3. 
+
+# Some key information from previous weeks
+
+# Practice
+
+1. Write a function `f_to_c()` that converts temperatures from Fahrenheit to Celsius. Note that the formula for conversion from the temperature in Fahrenheit ($F$) to temperature in Celsius ($C$) is: $C = (F - 32) \times 5/9$
+
+**We can start with some general code that does the conversion for us, starting with an arbitrary temperature value:**
+```{r}
+x <- 63  # temp in F
+(x - 32) * 5/9 # converted temperature
+```
+
+**Now we want to convert this to a basic function and test to see that it works.  Remember that we don't want to assign the value of `x` within our function!  That's just for our code creation purposes!**
+```{r}
+f_to_c <- function(x) {
+  
+  (x - 32) * 5/9 
+}
+
+# test the function and try to break it!
+f_to_c(63)
+f_to_c(-15)
+f_to_c("hot") # get an error message if input is not numeric!
+```
+
+**Now we add a check to see if the input is numeric. Again, we test it to see if it breaks!**
+
+```{r}
+f_to_c <- function(x) {
+  # check that input is numeric
+  if(!is.numeric(x)) {   # TRUE if not numeric, FALSE if numeric
+    stop("Please enter a value for x that is numeric!")
+  }
+  
+  (x - 32) * 5/9 
+}
+
+f_to_c(63)
+f_to_c(95)
+f_to_c(212) 
+f_to_c("five") # Now we get our pre-specified error message!
+f_to_c(NA) # We could also consider adding an if statement that if the input is `NA` then the output will also be `NA`
+```
+
+**Let's also add an if statement for that if the input is `NA` then the output will also be `NA`. We'll check that first, and if it's true we'll return `NA`.  If it's false, then we will do the same steps we did in the version above!  Note, since the code is getting more complicated, I am using an explicit `return()` function to specify what the function will return for each branch.**
+```{r}
+f_to_c <- function(x) {
+  # check whether input is NA
+  if(is.na(x)) {
+    return("NA")
+  } else {
+    # check that input is numeric
+    if(!is.numeric(x)) {   # TRUE if not numeric, FALSE if numeric
+      stop("Please enter a value for x that is numeric!")
+      }
+    
+    return((x - 32) * 5/9)
+  }
+}
+
+f_to_c(63)
+f_to_c(95)
+f_to_c(212) 
+f_to_c("five") # Now we get our pre-specified error message!
+f_to_c(NA) # Now we get NA
+```
+
+**As further work, we could think about extending out function to allow for inputs that are vectors instead of individual values, but we won't do that here!**
+
+2. Write a `temp_conversion()` function that will convert temperatures from Fahrenheit to Celsius OR from Celsius to Fahrenheit, depending on what the user specifies.  Make the default be conversion from Fahrenheit to Celsius.  Note that the formula for conversion from the temperature in Celsius ($C$) to temperature in Fahrenheit ($F$) is: $F = (C \times 9/5) + 32$
+
+**Again, let's start with some general code that will do the conversions; this time we will also have an input for the type of conversion the user specifies:**
+```{r}
+# example code for f_to_c conversion
+x <- 23
+conv_type <- "f2c"
+
+(x - 32) * 5/9 
+
+# example code for c_to_f conversion
+x <- 23
+conv_type <- "c2f"
+
+(x * 9/5) + 32
+```
+
+**Now we want to build the function, were the user specified `conv_type` argument will tell us which branch of a conditional execution to use.  We want to make "f2c" the default conversion type.  We'll also specify a warning message if the user doesn't specify either of "f2c" or "c2f" as the type, so we'll really have 3 branches here!**
+```{r}
+temp_conversion <- function(x, conv_type = "f2c") {  # we will make f2c the default convergence type
+
+  if (conv_type == "f2c") {
+    (x - 32) * 5/9 
+  } else if (conv_type == "c2f") {
+    (x * 9/5) + 32
+  } else {
+    "Please specify conv_type as `f2c` or `c2f`."
+  }
+
+}
+
+# These tests all look good!
+temp_conversion(23)
+temp_conversion(23, conv_type="f2c")
+temp_conversion(23, conv_type="c2f")
+temp_conversion(23, conv_type="cel2fahr")
+
+# But we still need to add a check at the beginning that x is numeric
+temp_conversion("five", conv_type="c2f")
+```
+
+**Let's add our check at the beginning that the input is numeric:**
+```{r}
+temp_conversion <- function(x, conv_type = "f2c") { 
+
+  # check that input is numeric
+  if(!is.numeric(x)) {   # TRUE if not numeric, FALSE if numeric
+    stop("Please enter a value for x that is numeric!")
+  }
+  
+  if (conv_type == "f2c") {
+    (x - 32) * 5/9 
+  } else if (conv_type == "c2f") {
+    (x * 9/5) + 32
+  } else {
+    "Please specify conv_type as `f2c` or `c2f`."
+  }
+
+}
+
+# Now we get our pre-specified error message!
+temp_conversion("five", conv_type="c2f")
+```
+
+**We could also add a branch to deal with `NA` values like we did in #1, but I won't do that here.**
+
+3. Write a `logit()` function that calculates the log odds, $\log(p/(1-p))$ of an input.  Be sure to check that the input is a valid probability between 0 and 1.
+
+**Start with our basic code again:**
+```{r}
+p <- .7
+log( p / (1-p) )
+```
+
+**Turn this into a function and check!**
+```{r}
+logit <- function(p) {
+ log( p / (1-p) ) 
+}
+
+# These look good!
+logit(.7)
+logit(.3)
+
+# These cause problems because the log of negative values is undefined!
+logit(-.4)
+logit(1.3)
+```
+
+**Now we need to add a check to the top be be sure that the input value is between 0 and 1:**
+```{r}
+logit <- function(p) {
+  # check that p is between 0 and 1
+  if ( p < 0 || p > 1) {
+    stop("p must be between between 0 and 1")
+  }
+  
+ log( p / (1-p) ) 
+}
+
+# These look good!
+logit(.7)
+logit(.3)
+
+# These now return our error message!
+logit(-.4)
+logit(1.3)
+
+# Will this function work with a vector of p values?
+# No we get NaNs produced if *any* of the values are not between 0 and 1
+logit(c(.7, .3, 1.5, -2))
+```
+
+**We can change our check of the conditions to check whether any of the values are not between 0 and 1 using `any()`**:
+```{r}
+logit <- function(p) {
+  # check that p is between 0 and 1
+  if ( any(p < 0) || any(p > 1)) {   # give the condition on input that will break the function -- give the BAD, checks all vals in vector
+    stop("p must contain values between 0 and 1")
+  }
+  log( p / (1-p) ) 
+}
+
+# Now we get the proper error message!
+logit(c(.7, .3, 1.5, -2))
+```
+
+4. Write a `birthday` function that inputs a date in the format `"mm-dd"` and says “Happy birthday!” if it's your birthday and "It's not your birthday yet!" if it's not your birthday.
+
+**Start with the basic code:**
+```{r}
+# If x gives my birthday
+x <- "09-17"
+
+# Return "Happy birthday!"
+"Happy birthday!"
+
+# If x doesn't give my birthday
+x <- "11-09"
+
+# Return "It's not your birthday yet!"
+"It's not your birthday yet!"
+```
+
+**Now put this into a function with two branches -- one that return the birthday message and one that does the other:**
+```{r}
+birthday <- function(x) {
+if(x == "09-17") {
+  "Happy birthday!"
+} else {
+  "It's not your birthday yet!"
+}
+}
+
+# These look good!
+birthday("09-17")
+birthday("11-09")
+
+# Right now values that aren't dates will still return that it's not your birthday
+birthday("today")
+```
+
+**We could write a check at the beginning to check that the input is in the proper format, but that involves working with strings (text data) which we haven't covered in this course!  So we will leave it as is for now.**
+
+5. Write a function called `is_binary()` that takes a vector as an argument and returns `TRUE` if the vector contains only 0s and 1s (and possibly `NA` values) and returns `FALSE` if the vector contains any values other than 0/1/`NA`. 
+
+**Initial code for a generic `x` vector of zeros and ones:**
+```{r}
+# binary input
+x <- c(0,1,1,0,1)
+
+# check whether each value is either a 1 or a 0
+# All true!
+# We need to get a single TRUE or FALSE for the whole vector!
+x == 1 | x == 0
+
+# check the condition is true for all elements in the vector
+# returns TRUE since all 0s and 1s
+all(x == 1 | x == 0)
+
+
+# try with non-binary input
+x <- c(1, 4, 10)
+
+# returns FALSE since not a binary vector
+all(x == 1 | x == 0)
+```
+
+**Convert this to a function:**
+```{r}
+is_binary <- function(x) {
+  if (all(x == 1 | x == 0) == TRUE) {
+    TRUE
+  } else {
+    FALSE
+  }
+}
+
+# Looks good!
+is_binary(c(0,1,1,0,1))
+is_binary(c(0,2,1,0,1))
+is_binary(c("hi","how","are","you","?"))
+```
+
+**In this case, we don't need to check for numeric input, because we are explicitly checking for it by checking for values of 0 and 1.  We could write this function even more simply, though, since when the condition is TRUE we are returning TRUE and when the condition is FALSE we are returning FALSE:**
+```{r}
+is_binary <- function(x) {
+  all(x == 1 | x == 0)
+}
+
+# Looks good!
+is_binary(c(0,1,1,0,1))
+is_binary(c(0,2,1,0,1))
+is_binary(c("hi","how","are","you","?"))
+```
+
+**One final comment here that may be helpful for your assignment.  If instead you wanted to check if a vector was NOT binary, you could change your condition to check whether any element in the vector is not 1 and not 0:**
+```{r}
+is_not_binary <- function(x) {
+  any(x != 1 & x != 0)
+}
+
+# Looks good!
+is_not_binary(c(0,1,1,0,1))
+is_not_binary(c(0,2,1,0,1))
+is_not_binary(c("hi","how","are","you","?"))
+```
