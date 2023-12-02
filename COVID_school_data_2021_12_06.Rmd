@@ -1,0 +1,112 @@
+---
+title: "Final Example: Maryland COVID-19 School Outbreaks"
+date: "Monday, December 6, 2021"
+output:
+  html_document:
+    number_sections: false
+    toc: true
+    toc_depth: 1
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+With two kids in elementary school, I was very interested in what the spread of COVID-19 in school would be this fall.  Looking online, I found that the State of Maryland posts information on schools with active COVID-19 outbreaks [here](https://coronavirus.maryland.gov/pages/school-resources).  This page gives a snapshot of current outbreaks, but once a school no longer meets the definition of an outbreak they are removed from this list.  
+
+I wanted to get an idea of where (in which county school districts) outbreaks were occurring over time.  I thought it would be interesting look at districts that implemented mitigation measures (masking, etc) compared to those that did not.
+
+It turns out that the State of Maryland archives the data from this list [here](https://data.imap.maryland.gov/datasets/md-covid19-schooloutbreaks/explore), where you can download an updated dataset in CSV format!  I downloaded the most recent data set this morning and you can find it in this course materials project as "MD_COVID119_SchoolOutbreaks_2021_12_04.csv".  The data in this dataset was last updated on December 4, 2021.
+
+I hope this example will demonstrate to you the amount of information you learned over the semester and how you can start to work with your own data or other data you might come across that seems interesting to you!
+
+First, let's load the `tidyverse` package so we can work with our usual `tidyverse` functions: 
+```{r}
+library(tidyverse)
+```
+
+## Import data
+
+In Module 3 we learned how to import data from a CSV file.  We can use `read_csv()` to import the data from "MD_COVID119_SchoolOutbreaks_2021_12_04.csv".  We might want to first open the dataset to take a look at the format and see if we will need to make any adjustments when we read it in.
+
+```{r import_data}
+
+
+```
+
+## Wrangle data
+
+### Change `ReportDate` from `dttm` to `date`
+
+Do we really need the hours/minutes/seconds for our reporting date in `ReportDate`?  It doesn't really contain any useful information since it's all the same for each school in the dataset.  I googled "change date time to date in tidyverse" and the first link [here](https://lubridate.tidyverse.org/reference/as_date.html) is for the `as_date()` function from the `lubridate` package for converting an object to a date.  The `lubridate` package is a great package for working with date and date-time data.  There's a lot more about it in Chapter 16 of "R for Data Science" [here](https://r4ds.had.co.nz/dates-and-times.html).
+
+Let's use `as_date()` with the `mutate()` function to change the `ReportDate` variable from `dttm` to `date`:
+```{r}
+
+```
+
+### Explore data to see if other data issues
+
+We can look at a quick summary of the variables in the dataset using the `summary()` function:
+
+```{r}
+
+```
+
+Do you notice anything we should explore further?
+
+```{r}
+
+```
+
+### Calculate total outbreak cases by county/date instead of by school/date
+
+I want to look at how outbreaks are changing within school districts (counties) instead of within individual schools.  To do this, we need to have data by county instead of by school.  I would like a dataset where for each date I have a total number of cases in that county.  How can I do that?
+
+```{r}
+
+```
+
+### Graph total number of outbreak cases over time by county
+
+I would like to graph these outbreak cases by county over time.  How can I do that?
+
+```{r}
+
+```
+
+Which county had a big outbreak in spring of 2021?  How can we find out?
+```{r}
+
+```
+
+What if I would just like to look at a few counties: Baltimore, Baltimore City, Anne Arundel, and Howard counties?
+
+```{r}
+
+```
+
+### Adding information about mask mandates
+
+At the start of the school year, 5 counties did not require masking in schools: Carroll, Cecil, Dorchester, Somerset, and Worcester counties.  However, the Maryland State Board of Education voted to make masking mandatory for all school, and the state legislature approved in to effective on September 15, 2021.  How could we include this information on our graph?
+
+```{r}
+
+```
+
+### Other questions to investigate/think about
+
+* Are there any schools who have seen an outbreak of more than 100 students?  More than 50 students?  When did these outbreaks occur?
+
+* Does it make sense to graph outbreaks by school over time the way we did outbreaks by county?  Why or why not?  What would be an alternative?
+
+* Which county has the most outbreak cases currently? Which school has the most outbreak cases currently?
+
+* Does it make sense to compare counties based on their number of outbreak cases?  Is there a better way?  What additional information would you need in order to implement this better way?
+
+
+```{r}
+
+
+```
+
+
